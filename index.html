@@ -1911,16 +1911,19 @@
     finally{syncBusy=false;if(btn)btn.disabled=!currentUser;}
   }
   function onLocalSave(raw){if(!client||!currentUser)return;clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{
-    if(syncBusy)return;
+    if(!client||!currentUser)return;
+    // If a manual sync is in progress, retry instead of silently dropping this autosave.
+    if(syncBusy){onLocalSave(raw);return;}
     try{
-      const local=JSON.parse(raw);const baseline=getBaseline();
-      if(baseline===null){status('Local changes saved. Press “Sync now” to connect this data with the cloud.');return;}
-      const remoteRow=await getCloudRow();if(!remoteRow){status('Local changes saved. Press “Sync now” to create cloud data.');return;}
+      // Read the newest persisted state when the timer fires, not a potentially stale snapshot.
+      const local=getState();const baseline=getBaseline();
+      if(baseline===null){status('Local changes saved on this device. Press “Sync now” to safely connect this data with the cloud.');return;}
+      const remoteRow=await getCloudRow();if(!remoteRow){status('Local changes saved on this device. Press “Sync now” to create cloud data.');return;}
       const remoteText=stable(remoteRow.data);const localText=stable(local);
       if(remoteText!==baseline&&localText!==baseline&&remoteText!==localText){showConflict(remoteRow.data);status('Cloud changes detected on another device. Resolve the conflict before syncing more changes.');return;}
       if(localText!==baseline){await putCloudRow(local);}
     }catch(e){console.warn('Background sync paused:',e);status('Saved on this device. Cloud sync needs attention: '+(e.message||'unknown error'));}
-  },1400);}
+  },syncBusy?2000:1400);}
   async function connect(){
     const url=$('sq-cloud-url').value.trim().replace(/\/$/,'');const key=$('sq-cloud-key').value.trim();
     if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)||!key){status('Enter your Supabase project URL and public anon/publishable key.');return;}
