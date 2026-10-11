@@ -406,8 +406,9 @@
                         </h2>
                         <p class="text-xs opacity-70">Move tasks on the Matrix: urgency increases to the right, while importance increases upwards. Use the arrows and quadrant labels to choose what to work on first.</p>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-xs font-semibold opacity-70">Tasks: <strong id="task-count-badge" class="text-indigo-400">0</strong></span>
+                        <button type="button" onclick="switchTab('tasks')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-xl text-xs font-extrabold"><i class="fa-solid fa-list-check mr-1"></i> All Tasks <i class="fa-solid fa-arrow-right ml-1"></i></button>
                     </div>
                 </div>
 
@@ -854,7 +855,6 @@
                 </section>
 
                 </div>
-                </div>
             </div>
         </div>
 
@@ -867,7 +867,7 @@
                 </div>
                 <div class="space-y-4">
                     <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
-                        <h3 class="text-base font-black text-indigo-300">V8.0 — Quality of Life Update <span class="text-[10px] font-bold opacity-60">PLANNED</span></h3>
+                        <h3 class="text-base font-black text-indigo-300">V8.0 — Quality of Life Update <span class="text-[10px] font-bold opacity-60">IN DEVELOPMENT</span></h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Direct Matrix-to-All-Tasks navigation.</li><li>Project milestones remain in Projects, keeping All Tasks focused.</li><li>Student-focused Matrix quadrants with clearly directed urgency and importance axes.</li><li>Cloud and account controls moved into Settings → Cloud &amp; Account.</li><li>Rebuilt version history and updated Matrix guide.</li></ul>
                     </article>
                     <article class="themed-card-sub border rounded-2xl p-4 sm:p-5 space-y-3">
