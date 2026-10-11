@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V7.5.1 — Auto-update test</title>
+    <title>StudyQuest V7.5.2 — Update check test</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -2008,7 +2008,7 @@
       window.addEventListener('focus', checkUpdate);
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
       window.addEventListener('online', checkUpdate);
-      window.setInterval(checkUpdate, 30 * 60 * 1000);
+      window.setInterval(checkUpdate, 5 * 60 * 1000);
     } catch (err) {
       console.warn('StudyQuest update support could not be enabled:', err);
     }
