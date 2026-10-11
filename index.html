@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V7.5.2 — Update check test</title>
+    <title>StudyQuest V8.0 — Quality of Life Update</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -279,7 +279,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
-                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v7.0</span>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v8.0</span>
                     </div>
                     <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
                 </div>
@@ -343,6 +343,9 @@
                     <button type="button" onclick="switchTab('tasks')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
                         <span class="home-shortcut-icon bg-amber-500/15 text-amber-400"><i class="fa-solid fa-list-check text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">All Tasks</span><span class="block text-xs opacity-60 mt-1">Deadlines, homework and to-dos</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </button>
+                    <button type="button" onclick="switchTab('updates')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
+                        <span class="home-shortcut-icon bg-emerald-500/15 text-emerald-400"><i class="fa-solid fa-clock-rotate-left text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">Update Log</span><span class="block text-xs opacity-60 mt-1">What's new in each version</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                    </button>
                     <button type="button" onclick="switchTab('xp')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
                         <span class="home-shortcut-icon bg-purple-500/15 text-purple-400"><i class="fa-solid fa-trophy text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">XP & Levels</span><span class="block text-xs opacity-60 mt-1">Your rank, rewards and progress</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </button>
@@ -401,37 +404,38 @@
                         <h2 class="text-base font-bold flex items-center gap-2">
                             <i class="fa-solid fa-crosshairs text-indigo-400"></i> Interactive 2D Task Matrix
                         </h2>
-                        <p class="text-xs opacity-70">Drag dots to adjust Urgency (X axis) & Importance (Y axis). Text flips dynamically near top border.</p>
+                        <p class="text-xs opacity-70">Move tasks on the Matrix: urgency increases to the right, while importance increases upwards. Use the arrows and quadrant labels to choose what to work on first.</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-semibold opacity-70">Tasks: <strong id="task-count-badge" class="text-indigo-400">0</strong></span>
                     </div>
                 </div>
 
+                <div class="flex items-center justify-center gap-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300" aria-label="Importance axis direction"><i class="fa-solid fa-arrow-up"></i><span>Importance increases upwards · Y axis</span></div>
                 <!-- 2D Canvas Wrapper (100 x 100 grid) -->
-                <div class="relative w-full aspect-square max-h-[560px] my-4 rounded-2xl themed-card-sub border graph-grid overflow-hidden shadow-inner" id="graph-container">
+                <div class="relative w-full aspect-square max-h-[560px] my-2 rounded-2xl themed-card-sub border graph-grid overflow-hidden shadow-inner" id="graph-container">
                     
                     <!-- Background Quadrant Labels & Colors -->
                     <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none">
                         <!-- Q2: Schedule (Top-Left) -->
                         <div class="p-3 bg-blue-500/5 border-r border-b border-slate-800/60 flex flex-col justify-between">
-                            <span class="text-xs font-black uppercase text-blue-400/50 tracking-wider">Q2: Schedule (Important, Not Urgent)</span>
+                            <span class="text-xs font-black uppercase text-blue-400/70 tracking-wider">Q2: Plan Revision</span>
                             <span class="text-[10px] opacity-40 font-semibold">Top-Left</span>
                         </div>
                         <!-- Q1: Do First (Top-Right) -->
                         <div class="p-3 bg-red-500/5 border-b border-slate-800/60 flex flex-col justify-between items-end">
-                            <span class="text-xs font-black uppercase text-red-400/50 tracking-wider text-right">Q1: Do First (Urgent & Important)</span>
+                            <span class="text-xs font-black uppercase text-red-400/80 tracking-wider text-right">Q1: Do First</span>
                             <span class="text-[10px] opacity-40 font-semibold">Top-Right</span>
                         </div>
                         <!-- Q4: Eliminate (Bottom-Left) -->
                         <div class="p-3 bg-slate-500/5 border-r border-slate-800/60 flex flex-col justify-between">
                             <span class="text-[10px] opacity-40 font-semibold">Bottom-Left</span>
-                            <span class="text-xs font-black uppercase opacity-40 tracking-wider">Q4: Eliminate (Low Priority)</span>
+                            <span class="text-xs font-black uppercase opacity-60 tracking-wider">Q4: Optional / Later</span>
                         </div>
                         <!-- Q3: Delegate (Bottom-Right) -->
                         <div class="p-3 bg-amber-500/5 flex flex-col justify-between items-end">
                             <span class="text-[10px] opacity-40 font-semibold">Bottom-Right</span>
-                            <span class="text-xs font-black uppercase text-amber-400/50 tracking-wider text-right">Q3: Delegate (Urgent, Not Important)</span>
+                            <span class="text-xs font-black uppercase text-amber-400/70 tracking-wider text-right">Q3: Quick Actions</span>
                         </div>
                     </div>
 
@@ -443,11 +447,11 @@
                     <div id="graph-nodes-layer" class="absolute inset-0"></div>
                 </div>
 
-                <!-- Axis Legend Footer -->
-                <div class="flex items-center justify-between text-xs font-bold opacity-70 pt-1 px-1">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-arrow-left opacity-50"></i> Low Urgency (0)</span>
-                    <span class="text-indigo-400 font-extrabold uppercase tracking-wider">X Axis: Urgency &nbsp;|&nbsp; Y Axis: Importance</span>
-                    <span class="flex items-center gap-1">High Urgency (100) <i class="fa-solid fa-arrow-right opacity-50"></i></span>
+                <!-- Axis Legend Footer: urgency increases horizontally to the right -->
+                <div class="flex items-center justify-between gap-2 text-xs font-bold pt-1 px-1">
+                    <span class="opacity-65">Low urgency (0)</span>
+                    <span class="text-indigo-300 font-extrabold uppercase tracking-wider text-center">Urgency · X axis</span>
+                    <span class="flex items-center gap-1 text-indigo-300">More urgent <i class="fa-solid fa-arrow-right text-base"></i></span>
                 </div>
             </section>
 
@@ -470,7 +474,7 @@
                     <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></span>
-                            <h3 class="text-sm font-black uppercase tracking-wide">Q2: Schedule / Plan</h3>
+                            <h3 class="text-sm font-black uppercase tracking-wide">Q2: Plan Revision</h3>
                         </div>
                         <span id="count-q2" class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">0 Tasks</span>
                     </div>
@@ -482,7 +486,7 @@
                     <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
-                            <h3 class="text-sm font-black uppercase tracking-wide">Q3: Delegate / Quick Wins</h3>
+                            <h3 class="text-sm font-black uppercase tracking-wide">Q3: Quick Actions</h3>
                         </div>
                         <span id="count-q3" class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">0 Tasks</span>
                     </div>
@@ -494,7 +498,7 @@
                     <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded-full bg-slate-400 shadow-sm shadow-slate-400/50"></span>
-                            <h3 class="text-sm font-black uppercase tracking-wide">Q4: Eliminate / Low Priority</h3>
+                            <h3 class="text-sm font-black uppercase tracking-wide">Q4: Optional / Later</h3>
                         </div>
                         <span id="count-q4" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">0 Tasks</span>
                     </div>
@@ -509,14 +513,14 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h2 class="text-2xl font-black flex items-center gap-3"><i class="fa-solid fa-list-check text-amber-400"></i> All Tasks</h2>
-                        <p class="text-sm opacity-70 mt-1">Every active homework, revision session and project in one list, automatically updated when you create a task.</p>
+                        <p class="text-sm opacity-70 mt-1">Your active homework, revision, coursework and to-dos. Project milestones stay in Projects to keep this list focused.</p>
                     </div>
                     <button onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0"><i class="fa-solid fa-plus mr-1"></i> New task</button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     <input id="task-search" type="search" oninput="renderAllTasks()" placeholder="Search tasks and notes…" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
                     <select id="task-filter-subject" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All subjects</option><option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option></select>
-                    <select id="task-filter-type" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All task types</option><option>Homework</option><option>Revision</option><option>Project</option><option>Coursework</option><option>Test prep</option><option>Other</option><option>Milestone</option></select>
+                    <select id="task-filter-type" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All task types</option><option>Homework</option><option>Revision</option><option>Project</option><option>Coursework</option><option>Test prep</option><option>Other</option></select>
                     <select id="task-filter-status" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="active">Active work</option><option value="completed">Completed history</option><option value="all">All statuses</option></select>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold opacity-80">
@@ -690,63 +694,68 @@
                     <div class="p-5 rounded-2xl bg-red-500/10 border border-red-500/30 space-y-3">
                         <div class="flex items-center gap-2">
                             <span class="w-8 h-8 rounded-xl bg-red-500 text-white font-black flex items-center justify-center text-sm">Q1</span>
-                            <h3 class="text-lg font-extrabold">Do First (Urgent & Important)</h3>
+                            <h3 class="text-lg font-extrabold">Do First — Urgent & Important</h3>
                         </div>
                         <p class="text-xs opacity-80 leading-relaxed">
-                            Tasks with high urgency (X axis >= 50) and high importance (Y axis >= 50). These are pressing crises, looming deadlines, or critical problems requiring immediate focus.
+                            Tasks in the top-right: high urgency (X axis ≥ 50) and high importance (Y axis ≥ 50). Examples include a test tomorrow, overdue coursework, or an assignment due very soon.
                         </p>
-                        <div class="text-xs font-bold text-red-400">Action: Execute immediately today. Do not defer.</div>
+                        <div class="text-xs font-bold text-red-400">Action: Start with the next concrete step and give it focused time today.</div>
                     </div>
 
                     <!-- Q2 Detail -->
                     <div class="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/30 space-y-3">
                         <div class="flex items-center gap-2">
                             <span class="w-8 h-8 rounded-xl bg-blue-500 text-white font-black flex items-center justify-center text-sm">Q2</span>
-                            <h3 class="text-lg font-extrabold">Schedule / Plan (Not Urgent, Important)</h3>
+                            <h3 class="text-lg font-extrabold">Plan Revision — Important, Less Urgent</h3>
                         </div>
                         <p class="text-xs opacity-80 leading-relaxed">
-                            Tasks with low urgency (X axis &lt; 50) but high importance (Y axis >= 50). These include long-term planning, skill building, health, and strategic growth.
+                            Tasks in the top-left: important work that is not yet urgent, such as revising for a test next month, starting coursework early, or practising a topic you find difficult.
                         </p>
-                        <div class="text-xs font-bold text-blue-400">Action: Calendar specific time slots to complete these proactively.</div>
+                        <div class="text-xs font-bold text-blue-400">Action: Schedule short, realistic study sessions before the deadline gets close.</div>
                     </div>
 
                     <!-- Q3 Detail -->
                     <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
                         <div class="flex items-center gap-2">
                             <span class="w-8 h-8 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-sm">Q3</span>
-                            <h3 class="text-lg font-extrabold">Delegate / Quick Wins (Urgent, Not Important)</h3>
+                            <h3 class="text-lg font-extrabold">Quick Actions — Urgent, Lower Importance</h3>
                         </div>
                         <p class="text-xs opacity-80 leading-relaxed">
-                            Tasks with high urgency (X axis >= 50) but low importance (Y axis &lt; 50). These are interruptions, minor emails, or administrative errands.
+                            Tasks in the bottom-right: time-sensitive but lower-impact actions, such as confirming a school arrangement or packing something needed tomorrow.
                         </p>
-                        <div class="text-xs font-bold text-amber-400">Action: Delegate if possible or batch into quick 15-minute execution sprints.</div>
+                        <div class="text-xs font-bold text-amber-400">Action: Handle quickly if possible, but do not let small tasks displace important revision or coursework.</div>
                     </div>
 
                     <!-- Q4 Detail -->
                     <div class="p-5 rounded-2xl themed-card-sub border space-y-3">
                         <div class="flex items-center gap-2">
                             <span class="w-8 h-8 rounded-xl bg-slate-700 text-white font-black flex items-center justify-center text-sm">Q4</span>
-                            <h3 class="text-lg font-extrabold">Eliminate (Not Urgent & Not Important)</h3>
+                            <h3 class="text-lg font-extrabold">Optional / Later — Less Urgent, Lower Importance</h3>
                         </div>
                         <p class="text-xs opacity-80 leading-relaxed">
-                            Tasks low in both urgency (X axis &lt; 50) and importance (Y axis &lt; 50). These are time-wasters, passive distractions, or low-value activities.
+                            Tasks in the bottom-left: optional extras or low-priority tasks with no close deadline.
                         </p>
-                        <div class="text-xs font-bold opacity-70">Action: Prune, automate, or drop these from your active list.</div>
+                        <div class="text-xs font-bold opacity-70">Action: Leave these until more important schoolwork is under control; remove them if they are no longer useful.</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 4: SETTINGS & CHANGELOG -->
+        <!-- TAB: SETTINGS -->
         <div id="tab-settings" class="hidden space-y-6">
             <div class="themed-card rounded-3xl p-6 sm:p-8 border shadow-xl space-y-8">
                 <div>
                     <h2 class="text-2xl font-black flex items-center gap-3">
-                        <i class="fa-solid fa-sliders text-indigo-400"></i> Settings & Application Changelog
+                        <i class="fa-solid fa-sliders text-indigo-400"></i> Settings
                     </h2>
-                    <p class="text-sm opacity-70 mt-1">Customize appearance presets, toggle audio feedback, and view update logs.</p>
+                    <p class="text-sm opacity-70 mt-1">Customize StudyQuest, manage backups, and configure cloud account access.</p>
+                    <div class="flex flex-wrap gap-2 pt-3" role="tablist" aria-label="Settings sections">
+                        <button type="button" role="tab" aria-selected="true" onclick="switchSettingsPanel('general')" id="settings-tab-general" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-indigo-600 text-white">General</button>
+                        <button type="button" role="tab" aria-selected="false" onclick="switchSettingsPanel('cloud')" id="settings-tab-cloud" class="px-4 py-2 rounded-xl text-xs font-extrabold themed-card-sub border">Cloud &amp; Account</button>
+                    </div>
                 </div>
 
+                <div id="settings-panel-general" class="space-y-8">
                 <!-- Theme Customizer Section -->
                 <div class="space-y-4">
                     <h3 class="text-sm font-extrabold uppercase tracking-wider">Visual Theme Presets</h3>
@@ -803,8 +812,10 @@
                     <p id="backup-status" class="text-[11px] opacity-60" aria-live="polite">Backups include tasks, completed history, revision sessions, projects, schedules, activity and preferences.</p>
                 </div>
 
+                </div>
+                <div id="settings-panel-cloud" class="hidden space-y-4">
                 <!-- V7.4 Cloud Link -->
-                <section class="pt-6 border-t border-slate-800 space-y-4" aria-labelledby="cloud-link-title">
+                <section class="pt-2 space-y-4" aria-labelledby="cloud-link-title">
                     <div>
                         <h3 id="cloud-link-title" class="text-sm font-extrabold uppercase tracking-wider"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i>PC + Mobile Cloud Link</h3>
                         <p class="text-xs opacity-70 mt-2">Connect a Supabase project to share this planner between devices. Until configured, StudyQuest continues saving locally. Never paste a Supabase service-role key here; use only the public anon/publishable key.</p>
@@ -842,37 +853,53 @@
                     <p id="sq-cloud-status" class="text-xs opacity-75" role="status" aria-live="polite">Not connected. To enable real cross-device sync, deploy the site and configure the database using the included setup guide.</p>
                 </section>
 
-                <!-- Version Changelog Section -->
-                <div class="pt-6 border-t border-slate-800 space-y-4">
-                    <h3 class="text-sm font-extrabold uppercase tracking-wider">Version Update Logs</h3>
-                    
-                    <div class="space-y-3">
-                        <!-- v4.0 -->
-                        <div class="p-4 rounded-2xl themed-card-sub border border-indigo-500/30">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-black text-indigo-400 uppercase">Version 7.4 — PC + Mobile Web Link (Build)</span>
-                                <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-extrabold">Latest</span>
-                            </div>
-                            <ul class="text-xs opacity-80 space-y-1 list-disc list-inside">
-                                <li><strong>StudyQuest v6:</strong> Daily dashboard, searchable task list, smart revision recommendations, assisted study planning, project milestones, weekly statistics, undo and versioned backup/restore.</li><li><strong>Local-first data architecture:</strong> Safe v5 migration and stable record IDs designed to support future cloud sync.</li>
-                                <li><strong>LaTeX / Raw Math Formatting Fix:</strong> Replaced all raw LaTeX notation with clean readable English.</li>
-                                <li><strong>Theme Switching Engine:</strong> CSS custom variables dynamically apply proper background/card contrast across all themes.</li>
-                                <li><strong>Dedicated XP & Progression Tab:</strong> Features visual Level Roadmap, Rank Showcase, interactive formula breakdown, and live estimated XP reward table.</li>
-                            </ul>
-                        </div>
-
-                        <!-- v3.0 -->
-                        <div class="p-4 rounded-2xl themed-card-sub border">
-                            <div class="text-xs font-black opacity-60 uppercase mb-2">Version 3.0</div>
-                            <ul class="text-xs opacity-60 space-y-1 list-disc list-inside">
-                                <li>Smart Deadline Urgency Calculator with auto-calculated recommended X coordinates.</li>
-                                <li>Time Estimate Badges (15m, 30m, 45m, 1h, 2h+).</li>
-                                <li>Smart Focus Target Banner identifying highest-impact tasks.</li>
-                            </ul>
-                        </div>
-                    </div>
+                </div>
                 </div>
             </div>
+        </div>
+
+        <!-- TAB: VERSION HISTORY -->
+        <div id="tab-updates" class="hidden space-y-6">
+            <section class="themed-card rounded-3xl p-5 sm:p-8 border shadow-xl space-y-5">
+                <div>
+                    <h2 class="text-2xl font-black flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> StudyQuest Update Log</h2>
+                    <p class="text-sm opacity-70 mt-1">Major releases have their own sections. Minor versions and patches are grouped in smaller, muted cards beneath their parent release.</p>
+                </div>
+                <div class="space-y-4">
+                    <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
+                        <h3 class="text-base font-black text-indigo-300">V8.0 — Quality of Life Update <span class="text-[10px] font-bold opacity-60">PLANNED</span></h3>
+                        <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Direct Matrix-to-All-Tasks navigation.</li><li>Project milestones remain in Projects, keeping All Tasks focused.</li><li>Student-focused Matrix quadrants with clearly directed urgency and importance axes.</li><li>Cloud and account controls moved into Settings → Cloud &amp; Account.</li><li>Rebuilt version history and updated Matrix guide.</li></ul>
+                    </article>
+                    <article class="themed-card-sub border rounded-2xl p-4 sm:p-5 space-y-3">
+                        <h3 class="text-base font-black">V7 — Mobile Update</h3>
+                        <ul class="text-xs opacity-75 space-y-1 list-disc list-inside"><li>Responsive layouts and touch-friendly controls for phones and tablets.</li><li>Mobile bottom navigation and a usable Matrix on smaller screens.</li></ul>
+                        <div class="ml-2 sm:ml-4 themed-card border rounded-xl p-3 space-y-2">
+                            <div class="text-xs font-bold opacity-75">V7.4 — Web &amp; Cloud Update</div>
+                            <p class="text-xs opacity-65">Hosted web app, PWA setup, account sign-in, Supabase cloud sync, and compatibility with existing local data.</p>
+                            <div class="themed-card-sub border rounded-lg p-3 space-y-2">
+                                <div class="text-xs font-bold opacity-70">V7.5 — Automatic Updates</div>
+                                <p class="text-xs opacity-60">Service-worker update checks, update activation, and improved retry behaviour.</p>
+                                <div class="bg-slate-500/5 border rounded-lg p-2"><div class="text-[11px] font-bold opacity-60">V7.5.1 — Update refinement</div><p class="text-[11px] opacity-55 mt-1">Patch release grouped under V7.5.</p></div>
+                                <div class="bg-slate-500/5 border rounded-lg p-2"><div class="text-[11px] font-bold opacity-60">V7.5.2 — Update Check Test</div><p class="text-[11px] opacity-55 mt-1">Automatic updates tested on PC and phone, with existing tasks preserved.</p></div>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="themed-card-sub border rounded-2xl p-4 sm:p-5 space-y-3">
+                        <h3 class="text-base font-black">V6 — Study Planner Expansion</h3>
+                        <p class="text-xs opacity-75">Daily dashboard, searchable task list, smart revision recommendations, assisted study planning, project milestones, weekly statistics, undo, and versioned backup/restore.</p>
+                        <div class="ml-2 sm:ml-4 bg-slate-500/5 border rounded-xl p-3"><div class="text-xs font-bold opacity-60">V6.5 — UI Update</div><p class="text-xs opacity-55 mt-1">Calmer navigation, clearer hierarchy, and accessible shortcuts.</p></div>
+                    </article>
+                    <article class="themed-card-sub border rounded-2xl p-4 sm:p-5 space-y-3">
+                        <h3 class="text-base font-black">V5 — Matrix Update</h3>
+                        <p class="text-xs opacity-75">Introduced the urgency-versus-importance Matrix and improved task prioritisation and Matrix usability.</p>
+                        <div class="ml-2 sm:ml-4 bg-slate-500/5 border rounded-xl p-3"><div class="text-xs font-bold opacity-60">V5.2 — Bug Fixes</div><p class="text-xs opacity-55 mt-1">Bug-fixing release to improve reliability.</p></div>
+                    </article>
+                    <article class="themed-card-sub border rounded-2xl p-4 sm:p-5">
+                        <h3 class="text-base font-black opacity-70">V3 — Earlier Foundations</h3>
+                        <ul class="text-xs opacity-60 space-y-1 list-disc list-inside mt-2"><li>Smart Deadline Urgency Calculator with recommended X coordinates.</li><li>Time Estimate Badges (15m, 30m, 45m, 1h, 2h+).</li><li>Smart Focus Target Banner identifying high-impact tasks.</li></ul>
+                    </article>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -1006,7 +1033,7 @@
 
         // Tab Navigation Switcher
         function switchTab(tabId) {
-            const tabIds = ['dashboard', 'graph', 'tasks', 'revision', 'plan', 'projects', 'stats', 'xp', 'guide', 'settings'];
+            const tabIds = ['dashboard', 'graph', 'tasks', 'revision', 'plan', 'projects', 'stats', 'xp', 'guide', 'settings', 'updates'];
             tabIds.forEach(id => {
                 const el = document.getElementById(`tab-${id}`);
                 const btn = document.getElementById(`nav-${id}-btn`);
@@ -1038,6 +1065,22 @@
             if (tabId === 'plan') renderStudyPlan();
             if (tabId === 'projects') renderProjects();
             if (tabId === 'stats') renderStatistics();
+            if (tabId === 'updates') document.title = 'StudyQuest V8.0 — Quality of Life Update';
+        }
+
+        function switchSettingsPanel(panel) {
+            const general = document.getElementById('settings-panel-general');
+            const cloud = document.getElementById('settings-panel-cloud');
+            const generalTab = document.getElementById('settings-tab-general');
+            const cloudTab = document.getElementById('settings-tab-cloud');
+            if (!general || !cloud || !generalTab || !cloudTab) return;
+            const showCloud = panel === 'cloud';
+            general.classList.toggle('hidden', showCloud);
+            cloud.classList.toggle('hidden', !showCloud);
+            generalTab.className = 'px-4 py-2 rounded-xl text-xs font-extrabold ' + (!showCloud ? 'bg-indigo-600 text-white' : 'themed-card-sub border');
+            cloudTab.className = 'px-4 py-2 rounded-xl text-xs font-extrabold ' + (showCloud ? 'bg-indigo-600 text-white' : 'themed-card-sub border');
+            generalTab.setAttribute('aria-selected', String(!showCloud));
+            cloudTab.setAttribute('aria-selected', String(showCloud));
         }
 
         // Modal Handlers
@@ -1238,6 +1281,7 @@
             const typeFilter = document.getElementById('task-filter-type')?.value || 'all';
             const statusFilter = document.getElementById('task-filter-status')?.value || 'active';
             const active = getAllWorkItems().filter(w => {
+                if (w.workKind === 'milestone') return false;
                 if (statusFilter === 'active' && w.completed) return false;
                 if (statusFilter === 'completed' && !w.completed) return false;
                 if (subjectFilter !== 'all' && w.subject !== subjectFilter) return false;
@@ -1689,10 +1733,10 @@
             }
 
             STATE.tasks.forEach(task => {
-                let quadrant = 'Q4: Eliminate';
+                let quadrant = 'Q4: Optional / Later';
                 if (task.x >= 50 && task.y >= 50) quadrant = 'Q1: Do First';
-                else if (task.x < 50 && task.y >= 50) quadrant = 'Q2: Schedule';
-                else if (task.x >= 50 && task.y < 50) quadrant = 'Q3: Delegate';
+                else if (task.x < 50 && task.y >= 50) quadrant = 'Q2: Plan Revision';
+                else if (task.x >= 50 && task.y < 50) quadrant = 'Q3: Quick Actions';
 
                 const xpVal = calculateTaskXP(task);
                 const tr = document.createElement('tr');
