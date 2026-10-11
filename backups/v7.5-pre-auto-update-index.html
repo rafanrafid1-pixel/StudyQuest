@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyQuest V7.4 — PC + Mobile</title>
+    <meta name="theme-color" content="#111827">
+    <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="studyquest-icon.svg">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="StudyQuest">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-main: #020617;
+            --bg-card: #0f172a;
+            --bg-card-sub: #020617;
+            --border-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-hover: #4f46e5;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Preset Color Themes */
+        body.theme-slate {
+            --bg-main: #020617;
+            --bg-card: #0f172a;
+            --bg-card-sub: #020617;
+            --border-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-hover: #4f46e5;
+        }
+        body.theme-oled {
+            --bg-main: #000000;
+            --bg-card: #0a0a0a;
+            --bg-card-sub: #121212;
+            --border-color: #262626;
+            --text-main: #ffffff;
+            --text-muted: #a3a3a3;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+        }
+        body.theme-cyberpunk {
+            --bg-main: #090014;
+            --bg-card: #160029;
+            --bg-card-sub: #240042;
+            --border-color: #3b0066;
+            --text-main: #f0f0f0;
+            --text-muted: #b080dd;
+            --accent-primary: #ff007f;
+            --accent-hover: #d6006b;
+        }
+        body.theme-pastel {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-sub: #f1f5f9;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-primary: #4f46e5;
+            --accent-hover: #4338ca;
+        }
+        body.theme-neon {
+            --bg-main: #03131e;
+            --bg-card: #072235;
+            --bg-card-sub: #0a2d47;
+            --border-color: #0e3f63;
+            --text-main: #e2f1f8;
+            --text-muted: #6ca1c1;
+            --accent-primary: #00e5ff;
+            --accent-hover: #00b3c7;
+        }
+
+        .themed-card {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+        }
+        .themed-card-sub {
+            background-color: var(--bg-card-sub);
+            border-color: var(--border-color);
+        }
+
+        /* Custom graph canvas grid pattern */
+        .graph-grid {
+            background-size: 10% 10%;
+            background-image: 
+                linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+        }
+
+        /* Task Node styling on canvas */
+        .task-node {
+            touch-action: none;
+            transition: transform 0.05s ease, box-shadow 0.2s ease;
+        }
+
+        .task-node.dragging {
+            cursor: grabbing !important;
+            z-index: 50 !important;
+            transform: translate(-50%, -50%) scale(1.25) !important;
+            box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Strict layering: Dot stays above text label */
+        .dot-circle {
+            z-index: 30;
+            position: relative;
+        }
+        .node-label {
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Quadrant pulse aura */
+        @keyframes aura-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .q1-aura {
+            animation: aura-pulse 2s infinite;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 9999px;
+        }
+
+        /* v6.5 UI Update: calmer navigation, clearer hierarchy, accessible shortcuts */
+        html { scroll-behavior: smooth; }
+        body { background-image: radial-gradient(ellipse at 15% 0%, rgba(99,102,241,.08), transparent 38%), radial-gradient(ellipse at 90% 8%, rgba(168,85,247,.055), transparent 30%); }
+        button { -webkit-tap-highlight-color: transparent; }
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }
+        .home-shortcut { position: relative; overflow: hidden; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+        .home-shortcut:hover { transform: translateY(-2px); border-color: rgba(129,140,248,.65); box-shadow: 0 12px 28px rgba(0,0,0,.12); }
+        .home-shortcut:active { transform: translateY(0) scale(.99); }
+        .home-shortcut-icon { width: 42px; height: 42px; display:flex; align-items:center; justify-content:center; border-radius: 14px; flex-shrink:0; }
+        .home-section-label { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; font-weight: 900; opacity: .55; }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+        /* StudyQuest V7.0 — responsive mobile-first refinements */
+        *, *::before, *::after { box-sizing: border-box; }
+        img, canvas, svg { max-width: 100%; }
+        button, input, select, textarea { font: inherit; }
+        button { touch-action: manipulation; }
+        input, select, textarea { min-width: 0; max-width: 100%; }
+        main { min-width: 0; }
+        main > div[id^="tab-"] { min-width: 0; }
+        .mobile-bottom-nav { display: none; }
+
+        @media (max-width: 767px) {
+            html { scroll-padding-top: 76px; }
+            body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+            header { position: sticky; top: 0; }
+            header > div { min-height: 60px !important; padding: 8px 12px !important; gap: 8px !important; }
+            header button[aria-label="Go to StudyQuest home"] { gap: 8px !important; }
+            header button[aria-label="Go to StudyQuest home"] > div:first-child { width: 36px !important; height: 36px !important; border-radius: 12px !important; }
+            header h1 { font-size: 17px !important; }
+            header .min-w-0 > .flex.items-center.gap-2 { gap: 5px !important; }
+            header .flex.items-center.gap-2.shrink-0 { gap: 6px !important; }
+            header #undo-action-btn { width: 36px; height: 36px; }
+            header button[onclick="openTaskModal()"] { height: 36px !important; width: 36px; justify-content: center; padding: 0 !important; }
+            header button[onclick="switchTab('settings')"] { width: 36px !important; height: 36px !important; }
+            main { padding: 12px !important; }
+            main > div[id^="tab-"] { gap: 16px !important; }
+            main section.rounded-3xl { border-radius: 20px !important; }
+            main .rounded-3xl.p-6, main .rounded-3xl.p-5 { padding: 16px !important; }
+            main h2.text-2xl { font-size: 21px !important; line-height: 1.25 !important; }
+            main h3.text-lg { font-size: 16px !important; }
+            main button, main input, main select, main textarea { min-height: 42px; }
+            main button { max-width: 100%; }
+            main input, main select, main textarea { font-size: 16px !important; }
+            #graph-container { width: 100%; aspect-ratio: 1 / 1; max-height: none; min-height: 280px; touch-action: none; }
+            #graph-container > .grid > div { padding: 7px !important; }
+            #graph-container > .grid > div > span { font-size: 8px !important; line-height: 1.25 !important; letter-spacing: .02em !important; }
+            #graph-container .task-node { max-width: 38%; }
+            #graph-container .node-label { max-width: min(34vw, 112px); white-space: normal !important; overflow-wrap: anywhere; text-align: center; font-size: 9px !important; line-height: 1.15 !important; padding: 2px 4px !important; }
+            #graph-container .dot-circle { width: 24px; height: 24px; }
+            .mobile-bottom-nav {
+                display: grid;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                position: fixed;
+                z-index: 60;
+                left: 0; right: 0; bottom: 0;
+                padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
+                border-top: 1px solid var(--border-color);
+                background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
+                box-shadow: 0 -8px 28px rgba(0,0,0,.18);
+            }
+            .mobile-nav-btn {
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                gap: 4px; min-width: 0; min-height: 48px; padding: 5px 2px;
+                border: 0; border-radius: 12px; background: transparent; color: var(--text-muted);
+                font-size: 10px; font-weight: 800; line-height: 1.1; cursor: pointer;
+            }
+            .mobile-nav-btn i { font-size: 17px; }
+            .mobile-nav-btn[aria-current="page"] { color: #a5b4fc; background: rgba(99,102,241,.16); }
+            .mobile-nav-btn:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: -2px; }
+            /* Prevent long content from forcing the whole page wider than the phone. */
+            .overflow-x-auto { max-width: 100%; }
+            table { min-width: 520px; }
+            #tab-tasks table, #tab-stats table { display: block; overflow-x: auto; }
+            .home-shortcut { min-width: 0; }
+            .home-shortcut .flex-1 { min-width: 0; }
+        }
+        @media (max-width: 380px) {
+            header > div { padding-left: 8px !important; padding-right: 8px !important; }
+            header button[aria-label="Go to StudyQuest home"] { gap: 6px !important; }
+            header button[aria-label="Go to StudyQuest home"] > div:first-child { width: 32px !important; height: 32px !important; }
+            header h1 { font-size: 15px !important; }
+            header .flex.items-center.gap-2.shrink-0 { gap: 4px !important; }
+            main { padding: 9px !important; }
+            #graph-container { min-height: 260px; }
+            #graph-container > .grid > div > span { font-size: 7px !important; }
+        }
+        @media (max-width: 340px) {
+            header #undo-action-btn { display: none; }
+            header .bg-indigo-500\/15 { display: none; }
+        }
+        @media (min-width: 768px) {
+            .mobile-bottom-nav { display: none !important; }
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="theme-slate min-h-screen flex flex-col antialiased">
+
+    <header class="themed-card border-b sticky top-0 z-40 backdrop-blur-md bg-opacity-95 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[68px] py-2 flex items-center justify-between gap-3">
+            <button type="button" onclick="switchTab('dashboard')" class="flex items-center gap-3 text-left min-w-0 group" aria-label="Go to StudyQuest home">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 font-bold shrink-0 group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-chart-scatter text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v7.0</span>
+                    </div>
+                    <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
+                </div>
+            </button>
+
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <button type="button" onclick="switchTab('xp')" title="View XP and level" class="group flex items-center gap-2 themed-card-sub border rounded-xl px-2.5 sm:px-3 py-2 hover:border-amber-400/60 transition-colors">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span class="hidden sm:block text-left"><span id="user-level" class="block text-[11px] font-extrabold text-indigo-400 leading-tight">Lvl 1 Novice Planner</span><span class="block w-20 bg-slate-700/50 h-1.5 rounded-full overflow-hidden mt-1"><span id="xp-progress-bar" class="block bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-400 h-full w-0 transition-all duration-300"></span></span></span>
+                    <span class="sm:hidden text-xs font-extrabold">XP</span>
+                </button>
+                <div title="Daily streak" class="hidden md:flex items-center gap-1.5 themed-card-sub border px-2.5 py-2 rounded-xl text-xs font-bold text-amber-400"><i class="fa-solid fa-fire text-amber-500"></i><span id="streak-count">1</span><span class="text-[10px] opacity-60 uppercase">day streak</span></div>
+                <button id="undo-action-btn" onclick="undoLastAction()" title="Undo last change" aria-label="Undo last change" class="themed-card-sub border w-10 h-10 rounded-xl text-sm opacity-80 hover:opacity-100 hover:border-indigo-400 transition-colors" disabled><i class="fa-solid fa-rotate-left"></i></button>
+                <button type="button" onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 h-10 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"><i class="fa-solid fa-plus"></i><span class="hidden sm:inline">New task</span></button>
+                <button type="button" onclick="switchTab('settings')" title="Settings" aria-label="Settings" class="themed-card-sub border w-10 h-10 rounded-xl text-sm opacity-80 hover:opacity-100 hover:border-indigo-400 transition-colors"><i class="fa-solid fa-gear"></i></button>
+            </div>
+        </div>
+    </header>
+
+
+    <nav class="mobile-bottom-nav" aria-label="Main mobile navigation">
+        <button type="button" class="mobile-nav-btn" data-mobile-tab="dashboard" onclick="switchTab('dashboard')" aria-current="page"><i class="fa-solid fa-house"></i><span>Home</span></button>
+        <button type="button" class="mobile-nav-btn" data-mobile-tab="graph" onclick="switchTab('graph')"><i class="fa-solid fa-chart-line"></i><span>Matrix</span></button>
+        <button type="button" class="mobile-nav-btn" data-mobile-tab="tasks" onclick="switchTab('tasks')"><i class="fa-solid fa-list-check"></i><span>Tasks</span></button>
+        <button type="button" class="mobile-nav-btn" data-mobile-tab="revision" onclick="switchTab('revision')"><i class="fa-solid fa-book-open"></i><span>Revision</span></button>
+        <button type="button" class="mobile-nav-btn" data-mobile-tab="xp" onclick="switchTab('xp')"><i class="fa-solid fa-trophy"></i><span>XP</span></button>
+    </nav>
+
+        <!-- Main Content Body -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- TAB 0: DAILY DASHBOARD -->
+        <div id="tab-dashboard" class="space-y-6">
+            <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div><h2 class="text-2xl font-black">Your study day</h2><p id="dashboard-date-label" class="text-sm opacity-65 mt-1">Your priorities, deadlines and revision at a glance.</p></div>
+                <div class="flex gap-2"><button onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold"><i class="fa-solid fa-plus mr-1"></i> Quick add</button><button onclick="switchTab('plan')" class="themed-card-sub border px-4 py-2.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-calendar-week mr-1"></i> Plan week</button></div>
+            </section>
+            <section class="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Daily study overview">
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Active tasks</div><div id="home-active" class="text-2xl font-black text-indigo-400 mt-1">0</div><button onclick="switchTab('tasks')" class="text-[10px] opacity-60 mt-1 hover:opacity-100">View all tasks →</button></div>
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Due today</div><div id="home-today" class="text-2xl font-black text-amber-400 mt-1">0</div><div class="text-[10px] opacity-60 mt-1">Tasks and milestones</div></div>
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Overdue</div><div id="home-overdue" class="text-2xl font-black text-red-400 mt-1">0</div><div class="text-[10px] opacity-60 mt-1">Work needing attention</div></div>
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Topics tracked</div><div id="home-topics" class="text-2xl font-black text-emerald-400 mt-1">0</div><div class="text-[10px] opacity-60 mt-1">GCSE revision topics</div></div>
+            </section>
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="themed-card border rounded-2xl p-5 lg:col-span-2 space-y-4"><div class="flex items-center justify-between gap-2"><h3 class="font-extrabold"><i class="fa-solid fa-bullseye text-amber-400 mr-2"></i>Today's priorities</h3><button onclick="switchTab('tasks')" class="text-xs text-indigo-300">All tasks →</button></div><div id="dashboard-priority-list" class="space-y-2"></div><div id="dashboard-priority-empty" class="hidden themed-card-sub border border-dashed rounded-xl p-5 text-center text-xs opacity-70">You're clear of active tasks. Add homework or revision when you need to.</div></div>
+                <div class="themed-card border rounded-2xl p-5 space-y-3"><h3 class="font-extrabold"><i class="fa-solid fa-book-open text-emerald-400 mr-2"></i>Revision suggestion</h3><div id="dashboard-next-topic" class="font-bold">Add a revision topic to get a recommendation.</div><p id="dashboard-topic-reason" class="text-xs opacity-65">Suggestions use confidence and time since revision.</p><button onclick="switchTab('revision')" class="w-full themed-card-sub border rounded-xl py-2.5 text-xs font-bold">Open Revision Centre</button></div>
+            </section>
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="themed-card border rounded-2xl p-5 space-y-3"><div class="flex items-center justify-between"><h3 class="font-extrabold">Coming up</h3><span class="text-[10px] opacity-60">Next 7 days</span></div><div id="dashboard-upcoming" class="space-y-2"></div><div id="dashboard-upcoming-empty" class="hidden text-xs opacity-60">No deadlines in the next seven days.</div></div>
+                <div class="themed-card border rounded-2xl p-5 space-y-4"><h3 class="font-extrabold">This week's progress</h3><div class="grid grid-cols-2 gap-3"><div class="themed-card-sub border rounded-xl p-3"><div class="text-[10px] opacity-60 uppercase font-bold">Work completed</div><div id="home-week-completed" class="text-xl font-black text-emerald-400">0</div></div><div class="themed-card-sub border rounded-xl p-3"><div class="text-[10px] opacity-60 uppercase font-bold">Revision sessions</div><div id="home-week-sessions" class="text-xl font-black text-indigo-400">0</div></div><div class="themed-card-sub border rounded-xl p-3"><div class="text-[10px] opacity-60 uppercase font-bold">XP earned</div><div id="home-week-xp" class="text-xl font-black text-amber-400">0</div></div><div class="themed-card-sub border rounded-xl p-3"><div class="text-[10px] opacity-60 uppercase font-bold">Recorded study</div><div id="home-week-time" class="text-xl font-black">0m</div></div></div><button onclick="switchTab('stats')" class="text-xs text-indigo-300">View full statistics →</button></div>
+            </section>
+            <!-- v6.5 HOME NAVIGATION HUB: primary destinations are visible from the front page -->
+            <section class="space-y-4 pt-2" aria-labelledby="home-tools-heading">
+                <div class="flex items-end justify-between gap-3">
+                    <div><p class="home-section-label mb-1">Your workspace</p><h3 id="home-tools-heading" class="text-xl font-black tracking-tight">Jump back in</h3><p class="text-xs opacity-60 mt-1">Your most-used tools are one tap away.</p></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    <button type="button" onclick="switchTab('graph')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
+                        <span class="home-shortcut-icon bg-indigo-500/15 text-indigo-400"><i class="fa-solid fa-chart-line text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">Task Matrix</span><span class="block text-xs opacity-60 mt-1">See urgency vs importance</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                    </button>
+                    <button type="button" onclick="switchTab('tasks')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
+                        <span class="home-shortcut-icon bg-amber-500/15 text-amber-400"><i class="fa-solid fa-list-check text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">All Tasks</span><span class="block text-xs opacity-60 mt-1">Deadlines, homework and to-dos</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                    </button>
+                    <button type="button" onclick="switchTab('xp')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
+                        <span class="home-shortcut-icon bg-purple-500/15 text-purple-400"><i class="fa-solid fa-trophy text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">XP & Levels</span><span class="block text-xs opacity-60 mt-1">Your rank, rewards and progress</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                    </button>
+                </div>
+            </section>
+
+            <section class="themed-card border rounded-2xl p-4 sm:p-5 space-y-4" aria-labelledby="home-learning-heading">
+                <div><p class="home-section-label mb-1">Keep moving forward</p><h3 id="home-learning-heading" class="text-lg font-black">Revision & planning</h3><p class="text-xs opacity-60 mt-1">Everything for preparing, scheduling and managing bigger pieces of work.</p></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <button type="button" onclick="switchTab('revision')" class="home-shortcut themed-card-sub border rounded-xl p-3.5 text-left flex items-center gap-3 group"><span class="home-shortcut-icon bg-emerald-500/15 text-emerald-400"><i class="fa-solid fa-book-open-reader"></i></span><span class="flex-1 min-w-0"><span class="block text-sm font-bold">Revision Centre</span><span class="block text-[11px] opacity-55 mt-1">Topics & confidence</span></span><i class="fa-solid fa-chevron-right text-[10px] opacity-40"></i></button>
+                    <button type="button" onclick="switchTab('plan')" class="home-shortcut themed-card-sub border rounded-xl p-3.5 text-left flex items-center gap-3 group"><span class="home-shortcut-icon bg-sky-500/15 text-sky-400"><i class="fa-solid fa-calendar-week"></i></span><span class="flex-1 min-w-0"><span class="block text-sm font-bold">Study Plan</span><span class="block text-[11px] opacity-55 mt-1">Plan your week</span></span><i class="fa-solid fa-chevron-right text-[10px] opacity-40"></i></button>
+                    <button type="button" onclick="switchTab('projects')" class="home-shortcut themed-card-sub border rounded-xl p-3.5 text-left flex items-center gap-3 group"><span class="home-shortcut-icon bg-pink-500/15 text-pink-400"><i class="fa-solid fa-folder-tree"></i></span><span class="flex-1 min-w-0"><span class="block text-sm font-bold">Projects</span><span class="block text-[11px] opacity-55 mt-1">Milestones & progress</span></span><i class="fa-solid fa-chevron-right text-[10px] opacity-40"></i></button>
+                    <button type="button" onclick="switchTab('stats')" class="home-shortcut themed-card-sub border rounded-xl p-3.5 text-left flex items-center gap-3 group"><span class="home-shortcut-icon bg-cyan-500/15 text-cyan-400"><i class="fa-solid fa-chart-column"></i></span><span class="flex-1 min-w-0"><span class="block text-sm font-bold">Statistics</span><span class="block text-[11px] opacity-55 mt-1">Weekly activity</span></span><i class="fa-solid fa-chevron-right text-[10px] opacity-40"></i></button>
+                </div>
+            </section>
+
+            <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-700/30 pt-5" aria-label="Help and preferences">
+                <div><p class="home-section-label mb-1">More</p><p class="text-sm font-bold">Help & preferences</p><p class="text-xs opacity-55 mt-1">Guides, appearance, backup and app settings.</p></div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="switchTab('guide')" class="themed-card-sub border rounded-xl px-4 py-2.5 text-xs font-bold hover:border-indigo-400 transition-colors"><i class="fa-solid fa-circle-question mr-2 text-indigo-400"></i>Guide</button>
+                    <button type="button" onclick="switchTab('settings')" class="themed-card-sub border rounded-xl px-4 py-2.5 text-xs font-bold hover:border-indigo-400 transition-colors"><i class="fa-solid fa-gear mr-2"></i>Settings & backups</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 1: GRAPH & MATRIX BOARD -->
+        <div id="tab-graph" class="hidden space-y-6">
+            <section class="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Study overview">
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Active tasks</div><div id="dashboard-active" class="text-2xl font-black text-indigo-400 mt-1">0</div><div class="text-[10px] opacity-60">Homework, revision & projects</div></div>
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Due today</div><div id="dashboard-today" class="text-2xl font-black text-amber-400 mt-1">0</div><div class="text-[10px] opacity-60">Tasks with today's deadline</div></div>
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Overdue</div><div id="dashboard-overdue" class="text-2xl font-black text-red-400 mt-1">0</div><div class="text-[10px] opacity-60">Deadlines to deal with</div></div>
+                <div class="themed-card border rounded-2xl p-4"><div class="text-[10px] uppercase font-extrabold opacity-60">Topics tracked</div><div id="dashboard-topics" class="text-2xl font-black text-emerald-400 mt-1">0</div><div class="text-[10px] opacity-60">In your revision tracker</div></div>
+            </section>
+
+            <!-- Smart Focus Banner -->
+            <div id="focus-banner" class="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg shrink-0">
+                        <i class="fa-solid fa-bullseye animate-bounce"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-black uppercase tracking-wider text-amber-400">Best Next Study Task</div>
+                        <div id="focus-task-title" class="text-sm font-bold text-white">No active tasks on matrix</div>
+                        <div id="focus-task-coords" class="text-xs opacity-70">Add tasks or coordinates to calculate your highest priority target.</div>
+                    </div>
+                </div>
+                <button id="focus-complete-btn" onclick="completeFocusTask()" class="hidden bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5 shrink-0">
+                    <i class="fa-solid fa-check"></i> Complete Target (+XP)
+                </button>
+            </div>
+
+            <!-- Graph Canvas Container -->
+            <section class="themed-card rounded-3xl p-4 sm:p-6 shadow-2xl border relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
+                    <div>
+                        <h2 class="text-base font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-crosshairs text-indigo-400"></i> Interactive 2D Task Matrix
+                        </h2>
+                        <p class="text-xs opacity-70">Drag dots to adjust Urgency (X axis) & Importance (Y axis). Text flips dynamically near top border.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold opacity-70">Tasks: <strong id="task-count-badge" class="text-indigo-400">0</strong></span>
+                    </div>
+                </div>
+
+                <!-- 2D Canvas Wrapper (100 x 100 grid) -->
+                <div class="relative w-full aspect-square max-h-[560px] my-4 rounded-2xl themed-card-sub border graph-grid overflow-hidden shadow-inner" id="graph-container">
+                    
+                    <!-- Background Quadrant Labels & Colors -->
+                    <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none">
+                        <!-- Q2: Schedule (Top-Left) -->
+                        <div class="p-3 bg-blue-500/5 border-r border-b border-slate-800/60 flex flex-col justify-between">
+                            <span class="text-xs font-black uppercase text-blue-400/50 tracking-wider">Q2: Schedule (Important, Not Urgent)</span>
+                            <span class="text-[10px] opacity-40 font-semibold">Top-Left</span>
+                        </div>
+                        <!-- Q1: Do First (Top-Right) -->
+                        <div class="p-3 bg-red-500/5 border-b border-slate-800/60 flex flex-col justify-between items-end">
+                            <span class="text-xs font-black uppercase text-red-400/50 tracking-wider text-right">Q1: Do First (Urgent & Important)</span>
+                            <span class="text-[10px] opacity-40 font-semibold">Top-Right</span>
+                        </div>
+                        <!-- Q4: Eliminate (Bottom-Left) -->
+                        <div class="p-3 bg-slate-500/5 border-r border-slate-800/60 flex flex-col justify-between">
+                            <span class="text-[10px] opacity-40 font-semibold">Bottom-Left</span>
+                            <span class="text-xs font-black uppercase opacity-40 tracking-wider">Q4: Eliminate (Low Priority)</span>
+                        </div>
+                        <!-- Q3: Delegate (Bottom-Right) -->
+                        <div class="p-3 bg-amber-500/5 flex flex-col justify-between items-end">
+                            <span class="text-[10px] opacity-40 font-semibold">Bottom-Right</span>
+                            <span class="text-xs font-black uppercase text-amber-400/50 tracking-wider text-right">Q3: Delegate (Urgent, Not Important)</span>
+                        </div>
+                    </div>
+
+                    <!-- Center Axis Crosshair Lines -->
+                    <div class="absolute left-1/2 top-0 bottom-0 w-px bg-slate-700/60 pointer-events-none"></div>
+                    <div class="absolute top-1/2 left-0 right-0 h-px bg-slate-700/60 pointer-events-none"></div>
+
+                    <!-- Dynamic Task Dots Rendering Container -->
+                    <div id="graph-nodes-layer" class="absolute inset-0"></div>
+                </div>
+
+                <!-- Axis Legend Footer -->
+                <div class="flex items-center justify-between text-xs font-bold opacity-70 pt-1 px-1">
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-arrow-left opacity-50"></i> Low Urgency (0)</span>
+                    <span class="text-indigo-400 font-extrabold uppercase tracking-wider">X Axis: Urgency &nbsp;|&nbsp; Y Axis: Importance</span>
+                    <span class="flex items-center gap-1">High Urgency (100) <i class="fa-solid fa-arrow-right opacity-50"></i></span>
+                </div>
+            </section>
+
+            <!-- 4-Quadrant Cards Section -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Q1 Box -->
+                <div class="themed-card rounded-2xl p-4 border border-red-500/30 shadow-lg flex flex-col">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></span>
+                            <h3 class="text-sm font-black uppercase tracking-wide">Q1: Do First</h3>
+                        </div>
+                        <span id="count-q1" class="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300">0 Tasks</span>
+                    </div>
+                    <div id="list-q1" class="space-y-2.5 mt-3 flex-1 min-h-[120px]"></div>
+                </div>
+
+                <!-- Q2 Box -->
+                <div class="themed-card rounded-2xl p-4 border border-blue-500/30 shadow-lg flex flex-col">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></span>
+                            <h3 class="text-sm font-black uppercase tracking-wide">Q2: Schedule / Plan</h3>
+                        </div>
+                        <span id="count-q2" class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">0 Tasks</span>
+                    </div>
+                    <div id="list-q2" class="space-y-2.5 mt-3 flex-1 min-h-[120px]"></div>
+                </div>
+
+                <!-- Q3 Box -->
+                <div class="themed-card rounded-2xl p-4 border border-amber-500/30 shadow-lg flex flex-col">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
+                            <h3 class="text-sm font-black uppercase tracking-wide">Q3: Delegate / Quick Wins</h3>
+                        </div>
+                        <span id="count-q3" class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">0 Tasks</span>
+                    </div>
+                    <div id="list-q3" class="space-y-2.5 mt-3 flex-1 min-h-[120px]"></div>
+                </div>
+
+                <!-- Q4 Box -->
+                <div class="themed-card rounded-2xl p-4 border border-slate-700/50 shadow-lg flex flex-col">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-slate-400 shadow-sm shadow-slate-400/50"></span>
+                            <h3 class="text-sm font-black uppercase tracking-wide">Q4: Eliminate / Low Priority</h3>
+                        </div>
+                        <span id="count-q4" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">0 Tasks</span>
+                    </div>
+                    <div id="list-q4" class="space-y-2.5 mt-3 flex-1 min-h-[120px]"></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB: ALL ACTIVE TASKS -->
+        <div id="tab-tasks" class="hidden space-y-6">
+            <section class="themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-2xl font-black flex items-center gap-3"><i class="fa-solid fa-list-check text-amber-400"></i> All Tasks</h2>
+                        <p class="text-sm opacity-70 mt-1">Every active homework, revision session and project in one list, automatically updated when you create a task.</p>
+                    </div>
+                    <button onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0"><i class="fa-solid fa-plus mr-1"></i> New task</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    <input id="task-search" type="search" oninput="renderAllTasks()" placeholder="Search tasks and notes…" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
+                    <select id="task-filter-subject" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All subjects</option><option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option></select>
+                    <select id="task-filter-type" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All task types</option><option>Homework</option><option>Revision</option><option>Project</option><option>Coursework</option><option>Test prep</option><option>Other</option><option>Milestone</option></select>
+                    <select id="task-filter-status" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="active">Active work</option><option value="completed">Completed history</option><option value="all">All statuses</option></select>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold opacity-80">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> 4+ days left</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> 2–3 days left</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> 1 day, today or overdue</span>
+                </div>
+                <div id="all-task-list" class="space-y-3"></div>
+                <div id="all-task-empty" class="hidden text-center py-12 themed-card-sub rounded-2xl border border-dashed">
+                    <i class="fa-solid fa-clipboard-check text-3xl opacity-30"></i>
+                    <p class="font-bold mt-3">No active tasks</p>
+                    <p class="text-xs opacity-60 mt-1">Create a task and it will appear here automatically.</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB: REVISION TRACKER -->
+        <div id="tab-revision" class="hidden space-y-6">
+            <section class="themed-card rounded-3xl p-6 sm:p-8 border shadow-xl space-y-5">
+                <div>
+                    <h2 class="text-2xl font-black flex items-center gap-3"><i class="fa-solid fa-book-open-reader text-emerald-400"></i> Revision Tracker</h2>
+                    <p class="text-sm opacity-70 mt-1">Track GCSE topics, record how confident you feel, and prioritise the topics that need more practice.</p>
+                </div>
+                <form id="revision-topic-form" onsubmit="addRevisionTopic(event)" class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 themed-card-sub rounded-2xl border">
+                    <div class="md:col-span-4"><label class="block text-[10px] font-extrabold uppercase mb-1">Subject</label><select id="revision-subject" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option></select></div>
+                    <div class="md:col-span-5"><label class="block text-[10px] font-extrabold uppercase mb-1">Topic to revise</label><input id="revision-topic-name" required maxlength="120" placeholder="e.g. Cell biology or quadratic equations" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"></div>
+                    <div class="md:col-span-3"><label class="block text-[10px] font-extrabold uppercase mb-1">Confidence</label><select id="revision-confidence" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><option value="1">1 — Need to learn</option><option value="2">2 — Not confident</option><option value="3" selected>3 — Getting there</option><option value="4">4 — Confident</option><option value="5">5 — Exam ready</option></select></div>
+                    <div class="md:col-span-4"><label class="block text-[10px] font-extrabold uppercase mb-1">Exam date (optional)</label><input id="revision-exam-date" type="date" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"></div>
+                    <div class="md:col-span-8 flex items-end justify-end"><button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold"><i class="fa-solid fa-plus mr-1"></i> Add topic</button></div>
+                </form>
+                <div class="themed-card-sub border rounded-xl p-4"><div class="text-xs font-extrabold text-emerald-400 mb-1"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Smart recommendation</div><div id="revision-recommendation" class="text-sm font-bold">Add a topic to start receiving recommendations.</div><div id="revision-recommendation-reason" class="text-xs opacity-65 mt-1">Recommendations consider confidence, revision recency and optional exam dates.</div></div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h3 class="font-extrabold">Your topics</h3><p class="text-xs opacity-60">Update confidence after practice questions or a quick self-test.</p></div><select id="revision-filter" onchange="renderRevisionTopics()" class="px-3 py-2 rounded-xl themed-card-sub border text-xs"><option value="all">All subjects</option><option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option></select></div>
+                <div id="revision-topic-list" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div>
+                <div id="revision-empty" class="text-center py-10 themed-card-sub rounded-2xl border border-dashed"><i class="fa-solid fa-book text-3xl opacity-30"></i><p class="font-bold mt-3">No topics added yet</p><p class="text-xs opacity-60 mt-1">Add your first topic above to start building your revision checklist.</p></div>
+            </section>
+            <section class="themed-card rounded-2xl p-5 border"><h3 class="font-extrabold flex items-center gap-2"><i class="fa-solid fa-lightbulb text-amber-400"></i> A useful revision loop</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 text-xs"><div class="themed-card-sub border rounded-xl p-3"><strong>1. Recall</strong><p class="opacity-70 mt-1">Write what you remember before checking notes.</p></div><div class="themed-card-sub border rounded-xl p-3"><strong>2. Practise</strong><p class="opacity-70 mt-1">Answer exam-style questions and mark them.</p></div><div class="themed-card-sub border rounded-xl p-3"><strong>3. Re-rate</strong><p class="opacity-70 mt-1">Update your confidence honestly and revisit weak topics.</p></div></div></section>
+        </div>
+
+        <!-- TAB: ASSISTED STUDY PLAN -->
+        <div id="tab-plan" class="hidden space-y-6">
+            <section class="themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h2 class="text-2xl font-black"><i class="fa-solid fa-calendar-week text-indigo-400 mr-2"></i>Study Plan</h2><p class="text-sm opacity-65 mt-1">Set your available times, then generate suggestions. Nothing is scheduled until you accept it.</p></div><button onclick="generateScheduleSuggestions()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Suggest next 7 days</button></div>
+                <div><h3 class="font-extrabold mb-2">When are you available?</h3><p class="text-xs opacity-60 mb-3">These are editable starting defaults. Set times that actually fit your routine.</p><div id="availability-editor" class="space-y-2"></div><div class="flex justify-end mt-3"><button onclick="saveAvailabilityFromForm()" class="themed-card-sub border px-4 py-2 rounded-xl text-xs font-bold">Save availability</button></div></div>
+            </section>
+            <section class="themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-4"><div class="flex items-center justify-between gap-2"><h3 class="text-lg font-black">Suggested sessions</h3><span id="suggestion-count" class="text-xs opacity-60">0 suggestions</span></div><p id="suggestion-message" class="text-xs opacity-65">Generate suggestions to see a draft plan based on active tasks and revision topics.</p><div id="schedule-suggestions-list" class="space-y-2"></div></section>
+            <section class="themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-4"><h3 class="text-lg font-black">Accepted study plan</h3><div id="planned-session-list" class="space-y-2"></div><div id="planned-session-empty" class="hidden text-xs opacity-60 py-5 text-center">No sessions accepted yet.</div></section>
+        </div>
+
+        <!-- TAB: PROJECTS -->
+        <div id="tab-projects" class="hidden space-y-6">
+            <section class="themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-5"><div><h2 class="text-2xl font-black"><i class="fa-solid fa-folder-tree text-indigo-400 mr-2"></i>Projects</h2><p class="text-sm opacity-65 mt-1">Break coursework and larger assignments into manageable milestones.</p></div>
+                <form id="project-form" onsubmit="addProject(event)" class="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 themed-card-sub rounded-2xl border"><div class="md:col-span-4"><label class="block text-[10px] font-extrabold uppercase mb-1">Project title</label><input id="project-title" required maxlength="120" placeholder="e.g. History investigation" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"></div><div class="md:col-span-3"><label class="block text-[10px] font-extrabold uppercase mb-1">Subject</label><select id="project-subject" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option></select></div><div class="md:col-span-2"><label class="block text-[10px] font-extrabold uppercase mb-1">Due in days</label><input id="project-due-days" type="number" min="0" max="3650" placeholder="Optional" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"></div><div class="md:col-span-3"><label class="block text-[10px] font-extrabold uppercase mb-1">Notes (optional)</label><input id="project-notes" maxlength="300" placeholder="Brief description" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"></div><div class="md:col-span-12 flex justify-end"><button class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold" type="submit"><i class="fa-solid fa-plus mr-1"></i>Create project</button></div></form>
+                <div id="project-list" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div><div id="project-empty" class="text-center py-10 themed-card-sub rounded-2xl border border-dashed"><i class="fa-solid fa-folder-open text-3xl opacity-30"></i><p class="font-bold mt-3">No projects yet</p><p class="text-xs opacity-60 mt-1">Create a project and add milestones as you go.</p></div>
+            </section>
+        </div>
+
+        <!-- TAB: STATISTICS -->
+        <div id="tab-stats" class="hidden space-y-6">
+            <section class="themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-5"><div><h2 class="text-2xl font-black"><i class="fa-solid fa-chart-column text-indigo-400 mr-2"></i>Weekly Statistics</h2><p class="text-sm opacity-65 mt-1">A view of recorded activity, not estimates of work you have not logged.</p></div>
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3"><div class="themed-card-sub border rounded-2xl p-4"><div class="text-[10px] uppercase font-bold opacity-60">Work completed</div><div id="stats-completed" class="text-2xl font-black text-emerald-400">0</div></div><div class="themed-card-sub border rounded-2xl p-4"><div class="text-[10px] uppercase font-bold opacity-60">Revision sessions</div><div id="stats-revision" class="text-2xl font-black text-indigo-400">0</div></div><div class="themed-card-sub border rounded-2xl p-4"><div class="text-[10px] uppercase font-bold opacity-60">XP earned this week</div><div id="stats-xp" class="text-2xl font-black text-amber-400">0</div></div><div class="themed-card-sub border rounded-2xl p-4"><div class="text-[10px] uppercase font-bold opacity-60">Actual study time</div><div id="stats-time" class="text-2xl font-black">0m</div></div><div class="themed-card-sub border rounded-2xl p-4"><div class="text-[10px] uppercase font-bold opacity-60">Sessions planned</div><div id="stats-sessions-planned" class="text-2xl font-black text-sky-400">0</div></div><div class="themed-card-sub border rounded-2xl p-4"><div class="text-[10px] uppercase font-bold opacity-60">Sessions completed</div><div id="stats-sessions-completed" class="text-2xl font-black text-emerald-400">0</div></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div class="themed-card-sub border rounded-2xl p-4"><h3 class="font-extrabold mb-3">Activity by subject</h3><div id="stats-subjects" class="space-y-3"></div></div><div class="themed-card-sub border rounded-2xl p-4"><h3 class="font-extrabold mb-3">Weekly activity</h3><div id="stats-daily" class="space-y-2"></div></div></div>
+                <p id="stats-note" class="text-[11px] opacity-55">Study time counts only sessions where you record actual minutes. Historical time cannot be reconstructed if it wasn't recorded.</p>
+            </section>
+        </div>
+
+        <div id="tab-xp" class="hidden space-y-6">
+            <!-- Level Roadmap Header Card -->
+            <div class="themed-card rounded-3xl p-6 sm:p-8 border shadow-xl space-y-6 relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-500/30 shrink-0">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold uppercase text-amber-400 tracking-wider">Level Roadmap & Experience Overview</div>
+                            <h2 id="xp-tab-level-title" class="text-2xl font-black text-white">Level 1: Novice Planner</h2>
+                            <p class="text-xs opacity-70">Complete matrix tasks to gain XP, unlock higher productivity ranks, and master time management.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4 bg-slate-800/40 p-3 rounded-2xl border border-slate-700/50">
+                        <div class="text-center px-2">
+                            <div class="text-[10px] opacity-60 uppercase font-bold">Total XP</div>
+                            <div id="xp-tab-total-val" class="text-lg font-black text-amber-400">0 XP</div>
+                        </div>
+                        <div class="w-px h-8 bg-slate-700"></div>
+                        <div class="text-center px-2">
+                            <div class="text-[10px] opacity-60 uppercase font-bold">Next Level</div>
+                            <div id="xp-tab-next-val" class="text-lg font-black text-indigo-400">100 XP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual XP Progress Bar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span>Current Progress</span>
+                        <span id="xp-tab-progress-text">0 / 100 XP (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                        <div id="xp-tab-bar" class="bg-gradient-to-r from-amber-400 via-purple-500 to-indigo-500 h-full rounded-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rank Progression Showcase -->
+            <div class="themed-card rounded-3xl p-6 sm:p-8 border shadow-xl space-y-4">
+                <h3 class="text-base font-extrabold flex items-center gap-2">
+                    <i class="fa-solid fa-crown text-amber-400"></i> Unlockable Productivity Ranks
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" id="ranks-showcase-container">
+                    <!-- Dynamic level ranks injection -->
+                </div>
+            </div>
+
+            <!-- XP Formula Breakdown & Live Active Task List -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Formula Explanation Box -->
+                <div class="themed-card rounded-3xl p-6 border shadow-xl space-y-4 lg:col-span-1">
+                    <h3 class="text-base font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-indigo-400"></i> XP Calculation Formula
+                    </h3>
+                    <p class="text-xs opacity-80 leading-relaxed">
+                        Task XP rewards are dynamic and calculated using your task positioning on the matrix, duration estimate, and upcoming deadline bonuses.
+                    </p>
+                    <div class="p-3 themed-card-sub rounded-xl border text-xs space-y-2 font-mono">
+                        <div class="text-indigo-300 font-bold">Base XP = Math.round((Urgency * Importance) / 100)</div>
+                        <div class="text-amber-300 font-bold">Time Bonus = 15m (1.0x), 1h (1.2x), 2h+ (1.5x)</div>
+                        <div class="text-emerald-300 font-bold">Deadline Bonus = Due Today (+25 XP)</div>
+                    </div>
+                    <div class="text-[11px] opacity-60">High Urgency (X axis) and High Importance (Y axis) tasks yield maximum XP payout upon completion.</div>
+                </div>
+
+                <!-- Live Active Tasks XP Yield Table -->
+                <div class="themed-card rounded-3xl p-6 border shadow-xl space-y-4 lg:col-span-2 flex flex-col">
+                    <h3 class="text-base font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-indigo-400"></i> Live Active Tasks XP Value
+                    </h3>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-slate-400 uppercase font-extrabold">
+                                    <th class="py-2 px-3">Task Title</th>
+                                    <th class="py-2 px-3">Quadrant</th>
+                                    <th class="py-2 px-3">Coordinates (X, Y)</th>
+                                    <th class="py-2 px-3">Est. Time</th>
+                                    <th class="py-2 px-3 text-right">Potential XP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="xp-task-table-body" class="divide-y divide-slate-800/50">
+                                <!-- Dynamic task rows injection -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: STRATEGY GUIDE -->
+        <div id="tab-guide" class="hidden space-y-6">
+            <div class="themed-card rounded-3xl p-6 sm:p-8 border shadow-xl space-y-8">
+                <div>
+                    <h2 class="text-2xl font-black flex items-center gap-3">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400"></i> Study Planning Guide
+                    </h2>
+                    <p class="text-sm opacity-70 mt-1">Use the matrix to prioritise schoolwork, then schedule revision before tests and break big projects into smaller steps.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Q1 Detail -->
+                    <div class="p-5 rounded-2xl bg-red-500/10 border border-red-500/30 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-xl bg-red-500 text-white font-black flex items-center justify-center text-sm">Q1</span>
+                            <h3 class="text-lg font-extrabold">Do First (Urgent & Important)</h3>
+                        </div>
+                        <p class="text-xs opacity-80 leading-relaxed">
+                            Tasks with high urgency (X axis >= 50) and high importance (Y axis >= 50). These are pressing crises, looming deadlines, or critical problems requiring immediate focus.
+                        </p>
+                        <div class="text-xs font-bold text-red-400">Action: Execute immediately today. Do not defer.</div>
+                    </div>
+
+                    <!-- Q2 Detail -->
+                    <div class="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/30 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-xl bg-blue-500 text-white font-black flex items-center justify-center text-sm">Q2</span>
+                            <h3 class="text-lg font-extrabold">Schedule / Plan (Not Urgent, Important)</h3>
+                        </div>
+                        <p class="text-xs opacity-80 leading-relaxed">
+                            Tasks with low urgency (X axis &lt; 50) but high importance (Y axis >= 50). These include long-term planning, skill building, health, and strategic growth.
+                        </p>
+                        <div class="text-xs font-bold text-blue-400">Action: Calendar specific time slots to complete these proactively.</div>
+                    </div>
+
+                    <!-- Q3 Detail -->
+                    <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-sm">Q3</span>
+                            <h3 class="text-lg font-extrabold">Delegate / Quick Wins (Urgent, Not Important)</h3>
+                        </div>
+                        <p class="text-xs opacity-80 leading-relaxed">
+                            Tasks with high urgency (X axis >= 50) but low importance (Y axis &lt; 50). These are interruptions, minor emails, or administrative errands.
+                        </p>
+                        <div class="text-xs font-bold text-amber-400">Action: Delegate if possible or batch into quick 15-minute execution sprints.</div>
+                    </div>
+
+                    <!-- Q4 Detail -->
+                    <div class="p-5 rounded-2xl themed-card-sub border space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-xl bg-slate-700 text-white font-black flex items-center justify-center text-sm">Q4</span>
+                            <h3 class="text-lg font-extrabold">Eliminate (Not Urgent & Not Important)</h3>
+                        </div>
+                        <p class="text-xs opacity-80 leading-relaxed">
+                            Tasks low in both urgency (X axis &lt; 50) and importance (Y axis &lt; 50). These are time-wasters, passive distractions, or low-value activities.
+                        </p>
+                        <div class="text-xs font-bold opacity-70">Action: Prune, automate, or drop these from your active list.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: SETTINGS & CHANGELOG -->
+        <div id="tab-settings" class="hidden space-y-6">
+            <div class="themed-card rounded-3xl p-6 sm:p-8 border shadow-xl space-y-8">
+                <div>
+                    <h2 class="text-2xl font-black flex items-center gap-3">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i> Settings & Application Changelog
+                    </h2>
+                    <p class="text-sm opacity-70 mt-1">Customize appearance presets, toggle audio feedback, and view update logs.</p>
+                </div>
+
+                <!-- Theme Customizer Section -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider">Visual Theme Presets</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <button onclick="setTheme('theme-slate')" class="p-3 rounded-2xl border bg-slate-950 text-left hover:border-indigo-500 transition-all">
+                            <div class="w-full h-6 rounded-lg bg-indigo-600 mb-2"></div>
+                            <div class="text-xs font-bold text-white">Dark Slate</div>
+                            <div class="text-[10px] text-slate-400">Default dark mode</div>
+                        </button>
+                        <button onclick="setTheme('theme-oled')" class="p-3 rounded-2xl border bg-black text-left hover:border-blue-500 transition-all">
+                            <div class="w-full h-6 rounded-lg bg-blue-600 mb-2"></div>
+                            <div class="text-xs font-bold text-white">OLED Black</div>
+                            <div class="text-[10px] text-slate-400">Pure black mode</div>
+                        </button>
+                        <button onclick="setTheme('theme-cyberpunk')" class="p-3 rounded-2xl border bg-purple-950/60 text-left hover:border-pink-500 transition-all">
+                            <div class="w-full h-6 rounded-lg bg-pink-600 mb-2"></div>
+                            <div class="text-xs font-bold text-white">Cyberpunk</div>
+                            <div class="text-[10px] text-slate-400">Neon pink accent</div>
+                        </button>
+                        <button onclick="setTheme('theme-pastel')" class="p-3 rounded-2xl border bg-slate-100 text-left hover:border-indigo-600 transition-all">
+                            <div class="w-full h-6 rounded-lg bg-indigo-600 mb-2"></div>
+                            <div class="text-xs font-bold text-slate-900">Pastel Light</div>
+                            <div class="text-[10px] text-slate-500">Bright clean theme</div>
+                        </button>
+                        <button onclick="setTheme('theme-neon')" class="p-3 rounded-2xl border bg-cyan-950 text-left hover:border-cyan-400 transition-all">
+                            <div class="w-full h-6 rounded-lg bg-cyan-400 mb-2"></div>
+                            <div class="text-xs font-bold text-white">Neon Dusk</div>
+                            <div class="text-[10px] text-slate-400">Cyan dark mode</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Audio Toggle Section -->
+                <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-extrabold">Completion Audio Chime</div>
+                        <div class="text-xs opacity-70">Play a chime effect on task completion and confetti.</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="sound-toggle-checkbox" checked onchange="toggleSound(this.checked)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+
+                <!-- Data backup controls -->
+                <div class="pt-5 border-t border-slate-800 space-y-3">
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider">Your Data</h3>
+                    <p class="text-xs opacity-70">Your planner saves in this browser. Export a backup now and then so you can restore your tasks and revision topics if you change browser or device.</p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button type="button" onclick="undoLastAction()" class="px-4 py-2.5 rounded-xl text-xs font-bold themed-card-sub border hover:border-indigo-500"><i class="fa-solid fa-rotate-left mr-1"></i> Undo last change</button>
+                        <button type="button" onclick="exportBackup()" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white"><i class="fa-solid fa-download mr-1"></i> Export backup</button>
+                        <label class="px-4 py-2.5 rounded-xl text-xs font-bold themed-card-sub border cursor-pointer hover:border-indigo-500 text-center"><i class="fa-solid fa-upload mr-1"></i> Import backup<input type="file" accept="application/json,.json" onchange="importBackupFile(event)" class="hidden"></label>
+                    </div>
+                    <p id="backup-status" class="text-[11px] opacity-60" aria-live="polite">Backups include tasks, completed history, revision sessions, projects, schedules, activity and preferences.</p>
+                </div>
+
+                <!-- V7.4 Cloud Link -->
+                <section class="pt-6 border-t border-slate-800 space-y-4" aria-labelledby="cloud-link-title">
+                    <div>
+                        <h3 id="cloud-link-title" class="text-sm font-extrabold uppercase tracking-wider"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i>PC + Mobile Cloud Link</h3>
+                        <p class="text-xs opacity-70 mt-2">Connect a Supabase project to share this planner between devices. Until configured, StudyQuest continues saving locally. Never paste a Supabase service-role key here; use only the public anon/publishable key.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="text-xs font-bold space-y-1 block">Supabase project URL
+                            <input id="sq-cloud-url" type="url" autocomplete="url" placeholder="https://your-project.supabase.co" class="w-full rounded-xl border themed-card-sub px-3 py-3 text-sm font-normal">
+                        </label>
+                        <label class="text-xs font-bold space-y-1 block">Supabase publishable / anon key
+                            <input id="sq-cloud-key" type="password" autocomplete="off" placeholder="sb_publishable_… or anon key" class="w-full rounded-xl border themed-card-sub px-3 py-3 text-sm font-normal">
+                        </label>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button type="button" id="sq-cloud-connect" class="px-4 py-3 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white">Connect service</button>
+                        <button type="button" id="sq-cloud-signup" class="px-4 py-3 rounded-xl text-xs font-bold themed-card-sub border">Create account</button>
+                        <button type="button" id="sq-cloud-login" class="px-4 py-3 rounded-xl text-xs font-bold themed-card-sub border">Sign in</button>
+                        <button type="button" id="sq-cloud-sync" class="px-4 py-3 rounded-xl text-xs font-bold themed-card-sub border" disabled>Sync now</button>
+                        <button type="button" id="sq-cloud-logout" class="px-4 py-3 rounded-xl text-xs font-bold themed-card-sub border" disabled>Sign out</button>
+                    </div>
+                    <div id="sq-cloud-auth-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="text-xs font-bold space-y-1 block">Email
+                            <input id="sq-cloud-email" type="email" autocomplete="email" placeholder="you@example.com" class="w-full rounded-xl border themed-card-sub px-3 py-3 text-sm font-normal">
+                        </label>
+                        <label class="text-xs font-bold space-y-1 block">Password
+                            <input id="sq-cloud-password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" class="w-full rounded-xl border themed-card-sub px-3 py-3 text-sm font-normal">
+                        </label>
+                    </div>
+                    <div id="sq-cloud-conflict" class="hidden rounded-xl border border-amber-400/50 bg-amber-500/10 p-4 space-y-3">
+                        <p class="text-sm font-bold">Both this device and the cloud have changed since the last sync. Choose which copy to keep; nothing has been overwritten yet.</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <button type="button" id="sq-cloud-use-remote" class="px-4 py-3 rounded-xl text-xs font-bold bg-amber-600 text-white">Use cloud copy on this device</button>
+                            <button type="button" id="sq-cloud-use-local" class="px-4 py-3 rounded-xl text-xs font-bold themed-card-sub border">Keep this device and upload it</button>
+                        </div>
+                    </div>
+                    <p id="sq-cloud-status" class="text-xs opacity-75" role="status" aria-live="polite">Not connected. To enable real cross-device sync, deploy the site and configure the database using the included setup guide.</p>
+                </section>
+
+                <!-- Version Changelog Section -->
+                <div class="pt-6 border-t border-slate-800 space-y-4">
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider">Version Update Logs</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- v4.0 -->
+                        <div class="p-4 rounded-2xl themed-card-sub border border-indigo-500/30">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-black text-indigo-400 uppercase">Version 7.4 — PC + Mobile Web Link (Build)</span>
+                                <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-extrabold">Latest</span>
+                            </div>
+                            <ul class="text-xs opacity-80 space-y-1 list-disc list-inside">
+                                <li><strong>StudyQuest v6:</strong> Daily dashboard, searchable task list, smart revision recommendations, assisted study planning, project milestones, weekly statistics, undo and versioned backup/restore.</li><li><strong>Local-first data architecture:</strong> Safe v5 migration and stable record IDs designed to support future cloud sync.</li>
+                                <li><strong>LaTeX / Raw Math Formatting Fix:</strong> Replaced all raw LaTeX notation with clean readable English.</li>
+                                <li><strong>Theme Switching Engine:</strong> CSS custom variables dynamically apply proper background/card contrast across all themes.</li>
+                                <li><strong>Dedicated XP & Progression Tab:</strong> Features visual Level Roadmap, Rank Showcase, interactive formula breakdown, and live estimated XP reward table.</li>
+                            </ul>
+                        </div>
+
+                        <!-- v3.0 -->
+                        <div class="p-4 rounded-2xl themed-card-sub border">
+                            <div class="text-xs font-black opacity-60 uppercase mb-2">Version 3.0</div>
+                            <ul class="text-xs opacity-60 space-y-1 list-disc list-inside">
+                                <li>Smart Deadline Urgency Calculator with auto-calculated recommended X coordinates.</li>
+                                <li>Time Estimate Badges (15m, 30m, 45m, 1h, 2h+).</li>
+                                <li>Smart Focus Target Banner identifying highest-impact tasks.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- TASK CREATION / EDIT MODAL -->
+    <div id="task-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="themed-card border w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5 relative">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <h3 id="modal-title" class="text-base font-black">Create New Study Task</h3>
+                <button onclick="closeTaskModal()" class="opacity-70 hover:opacity-100 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="task-form" onsubmit="handleTaskSubmit(event)" class="space-y-4">
+                <input type="hidden" id="task-id">
+
+                <!-- Task Name -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Task Title</label>
+                    <input type="text" id="input-title" required placeholder="e.g. Prepare Quarter Presentation" class="w-full px-3.5 py-2.5 rounded-xl themed-card-sub border text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Task Type</label>
+                        <select id="input-type" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
+                            <option value="Homework">Homework</option><option value="Revision">Revision</option><option value="Project">Project</option><option value="Coursework">Coursework</option><option value="Test prep">Test preparation</option><option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Subject</label>
+                        <select id="input-subject" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
+                            <option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Topic / Notes (optional)</label>
+                    <textarea id="input-notes" rows="2" placeholder="e.g. Algebra: practise rearranging formulae, then check mistakes" class="w-full px-3.5 py-2.5 rounded-xl themed-card-sub border text-xs focus:outline-none focus:border-indigo-500 resize-y"></textarea>
+                </div>
+
+                <!-- Color Selector -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Dot Color</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="input-color" value="#6366f1" class="w-10 h-10 rounded-xl bg-transparent cursor-pointer border border-slate-800">
+                        <span class="text-xs opacity-70">Pick custom node color</span>
+                    </div>
+                </div>
+
+                <!-- Time Estimate Badges -->
+                <div>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Time Estimate</label>
+                    <div class="grid grid-cols-5 gap-1.5" id="time-badge-container">
+                        <button type="button" onclick="selectTimeBadge('15m')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">15m</button>
+                        <button type="button" onclick="selectTimeBadge('30m')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">30m</button>
+                        <button type="button" onclick="selectTimeBadge('45m')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">45m</button>
+                        <button type="button" onclick="selectTimeBadge('1h')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border border-indigo-500 bg-indigo-600/20 text-indigo-300">1h</button>
+                        <button type="button" onclick="selectTimeBadge('2h+')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">2h+</button>
+                    </div>
+                    <input type="hidden" id="input-time" value="1h">
+                </div>
+
+                <!-- Relative deadline and urgency recommendation -->
+                <div class="p-3 themed-card-sub rounded-2xl border space-y-2">
+                    <label for="input-due-days" class="block text-xs font-extrabold text-indigo-400 uppercase tracking-wider">Due in how many days?</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="input-due-days" min="-3650" max="3650" step="1" placeholder="e.g. 3 (leave blank if no deadline)" oninput="calculateDeadlineUrgency()" class="min-w-0 flex-1 px-3 py-2 rounded-xl themed-card border text-xs">
+                        <button type="button" onclick="applyRecommendedUrgency()" id="apply-urgency-btn" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-2 rounded-xl font-bold">Apply Rec</button>
+                    </div>
+                    <div class="text-[10px] opacity-60">Enter 0 for today, 1 for tomorrow, 2 for two days from now. Leave blank if there is no deadline.</div>
+                    <div id="deadline-rec-text" class="text-[11px] opacity-70 font-medium">Enter the number of days until the deadline to calculate recommended Urgency (X axis).</div>
+                </div>
+
+                <!-- Sliders: Urgency X and Importance Y -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-extrabold uppercase">Urgency (X)</label>
+                            <span id="urgency-val" class="text-xs font-bold text-indigo-400">50</span>
+                        </div>
+                        <input type="range" id="input-urgency" min="0" max="100" value="50" oninput="document.getElementById('urgency-val').innerText = this.value" class="w-full accent-indigo-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-extrabold uppercase">Importance (Y)</label>
+                            <span id="importance-val" class="text-xs font-bold text-indigo-400">50</span>
+                        </div>
+                        <input type="range" id="input-importance" min="0" max="100" value="50" oninput="document.getElementById('importance-val').innerText = this.value" class="w-full accent-indigo-500">
+                    </div>
+                </div>
+
+                <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-800">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-xs font-bold opacity-70 hover:opacity-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Application State Container
+        const STATE = {
+            schemaVersion: 6, tasks: [], revisionTopics: [], completedTasks: [], projects: [], plannedSessions: [], scheduleSuggestions: [], activityLog: [],
+            availability: null, preferences: { lastTab: 'dashboard' }, xp: 0, level: 1, streak: 1, soundEnabled: true, theme: 'theme-slate', recommendedX: null
+        };
+        const UNDO_STACK = [];
+        let LAST_UNDO_LABEL = '';
+
+        // Complete Productivity Rank Roster
+        const LEVEL_RANKS = [
+            { level: 1, title: "Novice Planner", xpReq: 0, icon: "fa-seedling", color: "text-emerald-400" },
+            { level: 2, title: "Task Organizer", xpReq: 100, icon: "fa-list-check", color: "text-blue-400" },
+            { level: 3, title: "Time Strategist", xpReq: 250, icon: "fa-clock", color: "text-cyan-400" },
+            { level: 4, title: "Focus Specialist", xpReq: 450, icon: "fa-bullseye", color: "text-indigo-400" },
+            { level: 5, title: "Execution Master", xpReq: 700, icon: "fa-bolt", color: "text-purple-400" },
+            { level: 6, title: "Matrix Tactician", xpReq: 1000, icon: "fa-chess", color: "text-pink-400" },
+            { level: 7, title: "Prioritization Guru", xpReq: 1400, icon: "fa-wand-magic-sparkles", color: "text-amber-400" },
+            { level: 8, title: "Workflow Architect", xpReq: 1900, icon: "fa-cubes", color: "text-orange-400" },
+            { level: 9, title: "Productivity Titan", xpReq: 2500, icon: "fa-shield-halved", color: "text-red-400" },
+            { level: 10, title: "Supreme Operator", xpReq: 3200, icon: "fa-crown", color: "text-yellow-300" }
+        ];
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLocalStorage();
+            renderAll();
+            setupDragging();
+            switchTab('dashboard');
+            updateUndoButton();
+        });
+
+        // Tab Navigation Switcher
+        function switchTab(tabId) {
+            const tabIds = ['dashboard', 'graph', 'tasks', 'revision', 'plan', 'projects', 'stats', 'xp', 'guide', 'settings'];
+            tabIds.forEach(id => {
+                const el = document.getElementById(`tab-${id}`);
+                const btn = document.getElementById(`nav-${id}-btn`);
+                const btnMb = document.getElementById(`nav-${id}-btn-mb`);
+
+                if (id === tabId) {
+                    el.classList.remove('hidden');
+                    if (btn) btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-2";
+                    if (btnMb) btnMb.className = "text-xs font-bold text-indigo-400 flex items-center gap-1";
+                } else {
+                    el.classList.add('hidden');
+                    if (btn) btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all opacity-70 hover:opacity-100 flex items-center gap-2";
+                    if (btnMb) btnMb.className = "text-xs font-semibold opacity-70 flex items-center gap-1";
+                }
+            });
+
+            document.querySelectorAll('.mobile-nav-btn').forEach(mobileBtn => {
+                const active = mobileBtn.dataset.mobileTab === tabId;
+                if (active) mobileBtn.setAttribute('aria-current', 'page');
+                else mobileBtn.removeAttribute('aria-current');
+            });
+
+            STATE.preferences = STATE.preferences || {};
+            STATE.preferences.lastTab = tabId;
+            if (tabId === 'xp') renderXPPage();
+            if (tabId === 'tasks') renderAllTasks();
+            if (tabId === 'revision') renderRevisionTopics();
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'plan') renderStudyPlan();
+            if (tabId === 'projects') renderProjects();
+            if (tabId === 'stats') renderStatistics();
+        }
+
+        // Modal Handlers
+        function openTaskModal(taskId = null) {
+            const modal = document.getElementById('task-modal');
+            const form = document.getElementById('task-form');
+            form.reset();
+
+            if (taskId) {
+                const t = STATE.tasks.find(item => item.id === taskId);
+                if (t) {
+                    document.getElementById('task-id').value = t.id;
+                    document.getElementById('input-title').value = t.title;
+                    document.getElementById('input-type').value = t.type || 'Homework';
+                    document.getElementById('input-subject').value = t.subject || 'Other';
+                    document.getElementById('input-notes').value = t.notes || '';
+                    document.getElementById('input-color').value = t.color || '#6366f1';
+                    document.getElementById('input-urgency').value = t.x;
+                    document.getElementById('input-importance').value = t.y;
+                    document.getElementById('urgency-val').innerText = t.x;
+                    document.getElementById('importance-val').innerText = t.y;
+                    document.getElementById('input-time').value = t.time || '1h';
+                    document.getElementById('input-due-days').value = t.deadline ? daysUntilDeadline(t.deadline) : '';
+                    selectTimeBadge(t.time || '1h');
+                    if (t.deadline) calculateDeadlineUrgency();
+                    document.getElementById('modal-title').innerText = "Edit Matrix Task";
+                }
+            } else {
+                document.getElementById('task-id').value = '';
+                document.getElementById('modal-title').innerText = "Create New Study Task";
+                document.getElementById('input-type').value = 'Homework';
+                document.getElementById('input-subject').value = 'Maths';
+                document.getElementById('input-notes').value = '';
+                selectTimeBadge('1h');
+                document.getElementById('input-due-days').value = '';
+                document.getElementById('deadline-rec-text').innerText = "Enter the number of days until the deadline to calculate recommended Urgency (X axis).";
+                document.getElementById('apply-urgency-btn').classList.add('hidden');
+                STATE.recommendedX = null;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+        }
+
+        function selectTimeBadge(badge) {
+            document.getElementById('input-time').value = badge;
+            document.querySelectorAll('.time-badge-btn').forEach(btn => {
+                if (btn.innerText.trim() === badge) {
+                    btn.className = "time-badge-btn py-1.5 text-xs font-bold rounded-lg border border-indigo-500 bg-indigo-600/20 text-indigo-300";
+                } else {
+                    btn.className = "time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500";
+                }
+            });
+        }
+
+        function startOfToday() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return today;
+        }
+
+        function dateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function daysUntilDeadline(deadline) {
+            if (!deadline) return null;
+            const target = new Date(`${deadline}T00:00:00`);
+            if (Number.isNaN(target.getTime())) return null;
+            return Math.round((target - startOfToday()) / 86400000);
+        }
+
+        function deadlineFromDays(days) {
+            if (days === '' || days === null || days === undefined) return '';
+            const count = Number(days);
+            if (!Number.isInteger(count)) return '';
+            const target = startOfToday();
+            target.setDate(target.getDate() + count);
+            return dateKey(target);
+        }
+
+        function dueStatus(task) {
+            const days = daysUntilDeadline(task.deadline);
+            if (days === null) return { days: null, label: 'No deadline', color: 'text-slate-400', dot: 'bg-slate-400' };
+            if (days < 0) return { days, label: `Overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'}`, color: 'text-red-500', dot: 'bg-red-500' };
+            if (days === 0) return { days, label: 'Due today', color: 'text-red-500', dot: 'bg-red-500' };
+            if (days === 1) return { days, label: '1 day left', color: 'text-red-500', dot: 'bg-red-500' };
+            if (days <= 3) return { days, label: `${days} days left`, color: 'text-yellow-400', dot: 'bg-yellow-400' };
+            return { days, label: `${days} days left`, color: 'text-slate-400', dot: 'bg-slate-400' };
+        }
+
+        function calculateDeadlineUrgency() {
+            const rawDays = document.getElementById('input-due-days').value;
+            const text = document.getElementById('deadline-rec-text');
+            const applyBtn = document.getElementById('apply-urgency-btn');
+            if (rawDays === '') {
+                text.innerText = 'No deadline set. Add a number of days to get a recommended urgency.';
+                applyBtn.classList.add('hidden');
+                STATE.recommendedX = null;
+                return;
+            }
+            const diffDays = Number(rawDays);
+            if (!Number.isInteger(diffDays) || (diffDays < 0 && !document.getElementById('task-id').value)) {
+                text.innerText = 'Enter a whole number of days (0 or more for new tasks).';
+                applyBtn.classList.add('hidden');
+                STATE.recommendedX = null;
+                return;
+            }
+
+            let recX = 50;
+            let explanation = '';
+            if (diffDays === 0) {
+                recX = 95; explanation = 'Due today. Recommended Urgency: 95.';
+            } else if (diffDays === 1) {
+                recX = 85; explanation = 'Due tomorrow. Recommended Urgency: 85.';
+            } else if (diffDays <= 3) {
+                recX = 70; explanation = `Due in ${diffDays} days. Recommended Urgency: 70.`;
+            } else if (diffDays <= 7) {
+                recX = 50; explanation = `Due in ${diffDays} days. Recommended Urgency: 50.`;
+            } else {
+                recX = 25; explanation = `Due in ${diffDays} days. Recommended Urgency: 25.`;
+            }
+            STATE.recommendedX = recX;
+            text.innerText = explanation;
+            applyBtn.classList.remove('hidden');
+        }
+
+        function applyRecommendedUrgency() {
+            if (STATE.recommendedX !== null) {
+                document.getElementById('input-urgency').value = STATE.recommendedX;
+                document.getElementById('urgency-val').innerText = STATE.recommendedX;
+            }
+        }
+
+        // Form Submission Handler
+        function handleTaskSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('task-id').value || 'task_' + Date.now();
+            const title = document.getElementById('input-title').value.trim();
+            const type = document.getElementById('input-type').value;
+            const subject = document.getElementById('input-subject').value;
+            const notes = document.getElementById('input-notes').value.trim();
+            const color = document.getElementById('input-color').value;
+            const x = parseInt(document.getElementById('input-urgency').value);
+            const y = parseInt(document.getElementById('input-importance').value);
+            const time = document.getElementById('input-time').value;
+            const deadline = deadlineFromDays(document.getElementById('input-due-days').value);
+
+            const existingIndex = STATE.tasks.findIndex(t => t.id === id);
+            if (document.getElementById('input-due-days').value !== '' && (!Number.isInteger(Number(document.getElementById('input-due-days').value)) || Number(document.getElementById('input-due-days').value) < (document.getElementById('task-id').value ? -3650 : 0) || Number(document.getElementById('input-due-days').value) > 3650)) { alert('Enter a valid whole number of days. New tasks must be due today or later.'); return; }
+            pushUndo(existingIndex > -1 ? 'Edit task' : 'Create task');
+            const previous = existingIndex > -1 ? STATE.tasks[existingIndex] : null;
+            const taskData = { ...(previous || {}), id, title, type, subject, notes, color, x, y, time, deadline, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+
+            if (existingIndex > -1) STATE.tasks[existingIndex] = taskData;
+            else STATE.tasks.push(taskData);
+            recordActivity({ type: existingIndex > -1 ? 'task_updated' : 'task_created', timestamp: new Date().toISOString(), subject, taskId: id, title });
+
+            saveLocalStorage();
+            renderAll();
+            closeTaskModal();
+        }
+
+        function renderDashboardStats() {
+            const todayKey = dateKey(startOfToday());
+            const active = STATE.tasks || [];
+            const work = getAllWorkItems();
+            const dueToday = work.filter(w => w.deadline === todayKey && !w.completed).length;
+            const overdue = work.filter(w => w.deadline && w.deadline < todayKey && !w.completed).length;
+            document.getElementById('dashboard-active').textContent = active.length;
+            document.getElementById('dashboard-today').textContent = dueToday;
+            document.getElementById('dashboard-overdue').textContent = overdue;
+            document.getElementById('dashboard-topics').textContent = (STATE.revisionTopics || []).length;
+            const home = id => document.getElementById(id);
+            if (home('home-active')) home('home-active').textContent = work.filter(w => !w.completed).length;
+            if (home('home-today')) home('home-today').textContent = dueToday;
+            if (home('home-overdue')) home('home-overdue').textContent = overdue;
+            if (home('home-topics')) home('home-topics').textContent = (STATE.revisionTopics || []).length;
+        }
+
+        function getAllWorkItems() {
+            const tasks = (STATE.tasks || []).map(t => ({ ...t, workId: 'task:' + t.id, workKind: 'task', completed: false }));
+            const milestones = [];
+            (STATE.projects || []).forEach(project => (project.milestones || []).forEach(m => milestones.push({ id: m.id, title: m.title, subject: project.subject || 'Other', type: 'Milestone', notes: project.title, deadline: m.deadline || project.deadline || '', time: m.time || '30m', x: 60, y: 70, color: '#8b5cf6', workId: 'milestone:' + project.id + ':' + m.id, workKind: 'milestone', projectId: project.id, completed: !!m.completed, milestone: m, project })));
+            return tasks.concat(milestones);
+        }
+
+        function renderAllTasks() {
+            const list = document.getElementById('all-task-list');
+            const empty = document.getElementById('all-task-empty');
+            if (!list || !empty) return;
+            list.innerHTML = '';
+            const query = (document.getElementById('task-search')?.value || '').trim().toLowerCase();
+            const subjectFilter = document.getElementById('task-filter-subject')?.value || 'all';
+            const typeFilter = document.getElementById('task-filter-type')?.value || 'all';
+            const statusFilter = document.getElementById('task-filter-status')?.value || 'active';
+            const active = getAllWorkItems().filter(w => {
+                if (statusFilter === 'active' && w.completed) return false;
+                if (statusFilter === 'completed' && !w.completed) return false;
+                if (subjectFilter !== 'all' && w.subject !== subjectFilter) return false;
+                if (typeFilter !== 'all' && w.type !== typeFilter) return false;
+                return !query || `${w.title} ${w.notes || ''} ${w.subject || ''} ${w.type || ''}`.toLowerCase().includes(query);
+            });
+            if (statusFilter !== 'active') {
+                (STATE.completedTasks || []).forEach(t => {
+                    if (statusFilter === 'active') return;
+                    if (subjectFilter !== 'all' && (t.subject || 'Other') !== subjectFilter) return;
+                    if (typeFilter !== 'all' && (t.type || 'Homework') !== typeFilter) return;
+                    if (query && !`${t.title} ${t.notes || ''} ${t.subject || ''} ${t.type || ''}`.toLowerCase().includes(query)) return;
+                    active.push({ ...t, workId: 'completed:' + t.id + ':' + t.completedAt, workKind: 'completed', completed: true });
+                });
+            }
+            active.sort((a,b) => {
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                const da = daysUntilDeadline(a.deadline), db = daysUntilDeadline(b.deadline);
+                if (da === null && db === null) return String(a.title).localeCompare(String(b.title));
+                if (da === null) return 1; if (db === null) return -1; return da - db;
+            });
+            empty.classList.toggle('hidden', active.length > 0);
+            active.forEach(item => {
+                const due = dueStatus(item);
+                const card = document.createElement('article');
+                card.className = 'themed-card-sub border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3';
+                const dueText = due.days === null ? 'No deadline' : due.label;
+                let actions = '';
+                if (item.workKind === 'task') actions = `<button type="button" onclick="openTaskModal('${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold hover:border-indigo-500"><i class="fa-solid fa-pen mr-1"></i>Edit</button><button type="button" onclick="completeTask('${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold"><i class="fa-solid fa-check mr-1"></i>Done</button><button type="button" onclick="deleteTask('${escapeAttr(item.id)}')" aria-label="Delete task" class="px-3 py-2 rounded-xl border themed-card text-xs opacity-70 hover:opacity-100"><i class="fa-solid fa-trash"></i></button>`;
+                else if (item.workKind === 'milestone') actions = `<button type="button" onclick="toggleMilestone('${escapeAttr(item.projectId)}','${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl ${item.completed?'themed-card border':'bg-emerald-600 text-white'} text-xs font-extrabold">${item.completed?'Reopen':'Complete'}</button><button type="button" onclick="switchTab('projects')" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold">Project</button>`;
+                else actions = `<button type="button" onclick="restoreCompletedTask('${escapeAttr(item.id)}','${escapeAttr(item.completedAt || '')}')" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold"><i class="fa-solid fa-rotate-left mr-1"></i>Restore</button>`;
+                card.innerHTML = `<span class="w-3 h-3 rounded-full shrink-0 border border-white/20" style="background-color:${item.color || '#6366f1'}"></span><div class="min-w-0 flex-1"><div class="font-extrabold text-sm break-words ${item.completed?'line-through opacity-60':''}">${escapeHtml(item.title)}</div><div class="flex flex-wrap items-center gap-1.5 mt-2 text-[10px]"><span class="bg-indigo-500/15 text-indigo-300 px-2 py-1 rounded-lg font-bold">${escapeHtml(item.subject || 'Other')}</span><span class="bg-slate-700/70 px-2 py-1 rounded-lg font-semibold">${escapeHtml(item.type || 'Homework')}</span><span class="themed-card border px-2 py-1 rounded-lg">${escapeHtml(item.time || '1h')}</span><span class="font-extrabold ${due.color} flex items-center gap-1"><span class="w-2 h-2 rounded-full ${due.dot}"></span>${escapeHtml(dueText)}</span>${item.workKind==='milestone'?'<span class="text-violet-300 font-bold">Project milestone</span>':''}${item.earnedXP?`<span class="text-amber-400 font-extrabold">+${Number(item.earnedXP)} XP</span>`:''}</div>${item.notes?`<p class="text-xs opacity-65 mt-2 whitespace-pre-wrap break-words">${escapeHtml(item.notes)}</p>`:''}${item.completedAt?`<p class="text-[10px] opacity-50 mt-1">Completed ${new Date(item.completedAt).toLocaleDateString()}</p>`:''}</div><div class="flex flex-wrap items-center gap-2 shrink-0">${actions}</div>`;
+                list.appendChild(card);
+            });
+        }
+
+        function addRevisionTopic(event) {
+            event.preventDefault();
+            const name = document.getElementById('revision-topic-name').value.trim();
+            if (!name) return;
+            const subject = document.getElementById('revision-subject').value;
+            const confidence = Number(document.getElementById('revision-confidence').value || 3);
+            const examDate = document.getElementById('revision-exam-date')?.value || '';
+            pushUndo('Add revision topic');
+            STATE.revisionTopics = STATE.revisionTopics || [];
+            STATE.revisionTopics.push({ id: createId('topic'), subject, name, confidence, revised: false, createdAt: new Date().toISOString(), lastRevised: null, examDate, revisionHistory: [] });
+            document.getElementById('revision-topic-name').value = '';
+            document.getElementById('revision-confidence').value = '3';
+            if (document.getElementById('revision-exam-date')) document.getElementById('revision-exam-date').value = '';
+            saveLocalStorage(); renderRevisionTopics(); renderDashboardStats(); renderDashboard();
+        }
+
+        function updateTopicConfidence(id, confidence) {
+            const topic = (STATE.revisionTopics || []).find(t => t.id === id);
+            if (!topic) return;
+            pushUndo('Update revision confidence');
+            topic.confidence = Math.max(1, Math.min(5, Number(confidence) || 3));
+            topic.confidenceHistory = topic.confidenceHistory || [];
+            topic.confidenceHistory.push({ confidence: topic.confidence, timestamp: new Date().toISOString() });
+            saveLocalStorage(); renderRevisionTopics(); renderDashboard();
+        }
+
+        function markTopicRevised(id, scoreValue = '') {
+            const topic = (STATE.revisionTopics || []).find(t => t.id === id);
+            if (!topic) return;
+            const score = scoreValue === '' || scoreValue === null ? null : Number(scoreValue);
+            if (score !== null && (!Number.isFinite(score) || score < 0 || score > 100)) { alert('Practice score must be between 0 and 100.'); return; }
+            pushUndo('Log revision session');
+            const now = new Date(); const timestamp = now.toISOString(); const today = dateKey(startOfToday());
+            topic.revisionHistory = topic.revisionHistory || [];
+            const alreadyAwardedToday = topic.lastXpAwardDate === today;
+            const gained = alreadyAwardedToday ? 0 : 10;
+            topic.revisionHistory.push({ id: createId('revision'), timestamp, score, xpEarned: gained });
+            topic.revised = true; topic.lastRevised = timestamp; topic.lastXpAwardDate = today;
+            STATE.xp = Number(STATE.xp || 0) + gained;
+            recordActivity({ type: 'revision_session', timestamp, subject: topic.subject, topicId: topic.id, title: topic.name, xpEarned: gained, score });
+            checkLevelUp(); saveLocalStorage(); renderRevisionTopics(); renderDashboardStats(); renderDashboard(); renderStatistics();
+        }
+
+        function resetTopicRevision(id) {
+            const topic = (STATE.revisionTopics || []).find(t => t.id === id);
+            if (!topic) return;
+            pushUndo('Reset revision status'); topic.revised = false; saveLocalStorage(); renderRevisionTopics();
+        }
+
+        function deleteRevisionTopic(id) {
+            const topic = (STATE.revisionTopics || []).find(t => t.id === id);
+            if (!topic || !confirm(`Delete revision topic “${topic.name}”? Its revision history will be removed.`)) return;
+            pushUndo('Delete revision topic');
+            STATE.revisionTopics = (STATE.revisionTopics || []).filter(t => t.id !== id);
+            STATE.plannedSessions = (STATE.plannedSessions || []).filter(s => s.topicId !== id);
+            saveLocalStorage(); renderRevisionTopics(); renderDashboardStats(); renderDashboard();
+        }
+
+        function getRecommendedTopic() {
+            const topics = STATE.revisionTopics || [];
+            if (!topics.length) return null;
+            const now = startOfToday();
+            return topics.map(topic => {
+                const last = topic.lastRevised ? new Date(topic.lastRevised) : null;
+                const daysSince = last && !Number.isNaN(last.getTime()) ? Math.max(0, Math.floor((now - new Date(last.getFullYear(),last.getMonth(),last.getDate())) / 86400000)) : 30;
+                const confidence = Math.max(1, Math.min(5, Number(topic.confidence || 3)));
+                const examDays = topic.examDate ? daysUntilDeadline(topic.examDate) : null;
+                const examBoost = examDays !== null && examDays >= 0 && examDays <= 21 ? (21 - examDays) / 3 : 0;
+                const score = (6 - confidence) * 3 + Math.min(daysSince, 30) * 0.35 + examBoost;
+                let reason = confidence <= 2 ? 'Your confidence rating is low.' : daysSince >= 7 ? `It has been about ${daysSince} days since you last revised it.` : 'It is one of the topics to keep practising.';
+                if (examDays !== null && examDays >= 0 && examDays <= 21) reason += ` Exam date is ${examDays === 0 ? 'today' : `in ${examDays} day${examDays===1?'':'s'}`}.`;
+                return { topic, score, reason, daysSince };
+            }).sort((a,b) => b.score-a.score)[0];
+        }
+
+        function renderRevisionTopics() {
+            const list = document.getElementById('revision-topic-list');
+            if (!list) return;
+            const filter = document.getElementById('revision-filter')?.value || 'all';
+            const topics = (STATE.revisionTopics || []).filter(t => filter === 'all' || t.subject === filter).sort((a,b) => (a.confidence || 3) - (b.confidence || 3));
+            list.innerHTML = '';
+            document.getElementById('revision-empty').classList.toggle('hidden', topics.length > 0);
+            topics.forEach(topic => {
+                const confidence = Math.max(1, Math.min(5, Number(topic.confidence || 3)));
+                const card = document.createElement('article'); card.className = 'themed-card-sub border rounded-2xl p-4 space-y-3';
+                const labels = {1:'Need to learn',2:'Not confident',3:'Getting there',4:'Confident',5:'Exam ready'};
+                const history = topic.revisionHistory || [];
+                const lastScore = [...history].reverse().find(h => h.score !== null && h.score !== undefined);
+                card.innerHTML = `<div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="text-[10px] uppercase tracking-wider font-extrabold text-indigo-300">${escapeHtml(topic.subject || 'Other')}</div><h4 class="font-extrabold mt-1 break-words">${escapeHtml(topic.name)}</h4>${topic.examDate?`<p class="text-[10px] opacity-60 mt-1">Exam: ${escapeHtml(topic.examDate)}</p>`:''}</div><button type="button" onclick="deleteRevisionTopic('${escapeAttr(topic.id)}')" aria-label="Delete topic" title="Delete topic" class="opacity-50 hover:opacity-100 p-1"><i class="fa-solid fa-trash"></i></button></div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3"><label class="text-[10px] font-bold opacity-70">Confidence</label><select onchange="updateTopicConfidence('${escapeAttr(topic.id)}', this.value)" class="flex-1 px-2.5 py-2 rounded-lg themed-card border text-xs">${[1,2,3,4,5].map(n=>`<option value="${n}" ${n===confidence?'selected':''}>${n} — ${labels[n]}</option>`).join('')}</select><span class="text-[10px] ${topic.revised?'text-emerald-400':'text-amber-400'} font-bold">${topic.revised?'Revised recently':'Needs a session'}</span></div>
+                    <div class="flex items-center gap-2"><input id="score-${escapeAttr(topic.id)}" type="number" min="0" max="100" placeholder="Score % (optional)" class="min-w-0 flex-1 px-2.5 py-2 rounded-lg themed-card border text-xs"><button onclick="markTopicRevised('${escapeAttr(topic.id)}', document.getElementById('score-${escapeAttr(topic.id)}').value)" class="text-xs px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold"><i class="fa-solid fa-check mr-1"></i> Log session</button></div>
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-[10px] opacity-60"><span>${topic.lastRevised ? 'Last revised ' + new Date(topic.lastRevised).toLocaleDateString() : 'Not revised yet'}</span><span>${history.length} session${history.length===1?'':'s'}${lastScore?` · Latest score ${Number(lastScore.score)}%`:''}</span></div>`;
+                list.appendChild(card);
+            });
+            const recommendation = getRecommendedTopic();
+            const recTitle = document.getElementById('revision-recommendation');
+            if (recTitle) { recTitle.textContent = recommendation ? `${recommendation.topic.subject}: ${recommendation.topic.name}` : 'Add a topic to start receiving recommendations.'; document.getElementById('revision-recommendation-reason').textContent = recommendation ? recommendation.reason : 'Recommendations consider confidence, revision recency and optional exam dates.'; }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+        function escapeAttr(value) { return escapeHtml(value).replace(/`/g, '&#96;'); }
+        function createId(prefix) { return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,9)}`; }
+        function recordActivity(event) { STATE.activityLog = STATE.activityLog || []; STATE.activityLog.push({ id: createId('event'), ...event }); if (STATE.activityLog.length > 5000) STATE.activityLog.splice(0, STATE.activityLog.length - 5000); }
+        function pushUndo(label) { try { UNDO_STACK.push({ label, snapshot: JSON.stringify(STATE) }); if (UNDO_STACK.length > 25) UNDO_STACK.shift(); LAST_UNDO_LABEL = label; updateUndoButton(); } catch(e) {} }
+        function updateUndoButton() { const btn = document.getElementById('undo-action-btn'); if (btn) { btn.disabled = !UNDO_STACK.length; btn.classList.toggle('opacity-30', !UNDO_STACK.length); btn.title = UNDO_STACK.length ? `Undo: ${UNDO_STACK[UNDO_STACK.length-1].label}` : 'Nothing to undo'; } }
+        function undoLastAction() { const entry = UNDO_STACK.pop(); if (!entry) return; try { const previous = JSON.parse(entry.snapshot); Object.keys(STATE).forEach(k => delete STATE[k]); Object.assign(STATE, previous); document.body.className = `${STATE.theme || 'theme-slate'} min-h-screen flex flex-col antialiased`; const sound = document.getElementById('sound-toggle-checkbox'); if (sound) sound.checked = STATE.soundEnabled !== false; saveLocalStorage(); renderAll(); renderRevisionTopics(); renderProjects(); renderStudyPlan(); renderStatistics(); updateUndoButton(); const status = document.getElementById('backup-status'); if (status) status.textContent = `Undid: ${entry.label}.`; } catch(e) { alert('Undo could not be completed.'); } }
+
+
+        function renderGraphNodes() {
+            const layer = document.getElementById('graph-nodes-layer');
+            layer.innerHTML = '';
+
+            STATE.tasks.forEach(task => {
+                const node = document.createElement('div');
+                node.className = `task-node absolute flex flex-col items-center justify-center -translate-x-1/2 -translate-y-1/2 cursor-grab`;
+                node.style.left = `${task.x}%`;
+                node.style.top = `${100 - task.y}%`;
+                node.dataset.id = task.id;
+
+                // Smart Label Position Flipping: If Importance Y >= 85, show text below dot
+                const isHighY = task.y >= 85;
+
+                node.innerHTML = `
+                    ${!isHighY ? `<div class="node-label text-[10px] font-extrabold text-white bg-slate-900/90 border border-slate-700/80 px-2 py-0.5 rounded-md shadow-md mb-1 whitespace-nowrap">${escapeHtml(task.title)}</div>` : ''}
+                    <div class="dot-circle w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[9px] font-black text-white ${task.x >= 50 && task.y >= 50 ? 'q1-aura' : ''}" style="background-color: ${task.color};">
+                        ${task.x >= 50 && task.y >= 50 ? '<i class="fa-solid fa-fire text-[8px]"></i>' : ''}
+                    </div>
+                    ${isHighY ? `<div class="node-label text-[10px] font-extrabold text-white bg-slate-900/90 border border-slate-700/80 px-2 py-0.5 rounded-md shadow-md mt-1 whitespace-nowrap">${escapeHtml(task.title)}</div>` : ''}
+                `;
+
+                node.addEventListener('dblclick', () => openTaskModal(task.id));
+                layer.appendChild(node);
+            });
+
+            document.getElementById('task-count-badge').innerText = STATE.tasks.length;
+        }
+
+        // Dragging Logic on Graph Canvas
+        function setupDragging() {
+            const container = document.getElementById('graph-container');
+            let activeNode = null;
+            let activeTaskId = null;
+
+            container.addEventListener('pointerdown', (e) => {
+                const node = e.target.closest('.task-node');
+                if (!node) return;
+
+                activeNode = node;
+                activeTaskId = node.dataset.id;
+                activeNode.classList.add('dragging');
+                activeNode.setPointerCapture(e.pointerId);
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (!activeNode || !activeTaskId) return;
+
+                const rect = container.getBoundingClientRect();
+                let xPx = e.clientX - rect.left;
+                let yPx = e.clientY - rect.top;
+
+                xPx = Math.max(0, Math.min(xPx, rect.width));
+                yPx = Math.max(0, Math.min(yPx, rect.height));
+
+                const xPercent = Math.round((xPx / rect.width) * 100);
+                const yPercent = Math.round((1 - (yPx / rect.height)) * 100);
+
+                const task = STATE.tasks.find(t => t.id === activeTaskId);
+                if (task) {
+                    task.x = xPercent;
+                    task.y = yPercent;
+                    activeNode.style.left = `${xPercent}%`;
+                    activeNode.style.top = `${100 - yPercent}%`;
+                }
+            });
+
+            const handlePointerUp = () => {
+                if (!activeNode) return;
+                activeNode.classList.remove('dragging');
+                activeNode = null;
+                activeTaskId = null;
+                saveLocalStorage();
+                renderAll();
+            };
+
+            container.addEventListener('pointerup', handlePointerUp);
+            container.addEventListener('pointercancel', handlePointerUp);
+        }
+
+        function renderQuadrantCards() {
+            const q1List = document.getElementById('list-q1');
+            const q2List = document.getElementById('list-q2');
+            const q3List = document.getElementById('list-q3');
+            const q4List = document.getElementById('list-q4');
+
+            q1List.innerHTML = q2List.innerHTML = q3List.innerHTML = q4List.innerHTML = '';
+
+            let counts = { q1: 0, q2: 0, q3: 0, q4: 0 };
+
+            STATE.tasks.forEach(task => {
+                let quadrant = '';
+                if (task.x >= 50 && task.y >= 50) quadrant = 'q1';
+                else if (task.x < 50 && task.y >= 50) quadrant = 'q2';
+                else if (task.x >= 50 && task.y < 50) quadrant = 'q3';
+                else quadrant = 'q4';
+
+                counts[quadrant]++;
+
+                const estimatedXP = calculateTaskXP(task);
+
+                const card = document.createElement('div');
+                card.className = "themed-card-sub border rounded-xl p-3 flex items-center justify-between gap-2 shadow-sm hover:border-slate-600 transition-all";
+                card.innerHTML = `
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                        <span class="w-3.5 h-3.5 rounded-full shrink-0 border border-white/20" style="background-color: ${task.color}"></span>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-xs font-bold truncate">${escapeHtml(task.title)}</div>
+                            <div class="flex items-center gap-1.5 flex-wrap text-[10px] opacity-80 mt-1">
+                                <span class="bg-indigo-500/15 text-indigo-300 px-1.5 py-0.5 rounded font-bold">${task.subject || 'Other'}</span>
+                                <span class="bg-slate-700/70 px-1.5 py-0.5 rounded font-semibold">${task.type || 'Homework'}</span>
+                                <span class="bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold">${task.time || '1h'}</span>
+                                ${task.deadline ? `<span class="text-indigo-400"><i class="fa-regular fa-calendar text-[9px]"></i> ${task.deadline}</span>` : ''}
+                                <span>X:${task.x} Y:${task.y}</span>
+                                <span class="text-amber-400 font-extrabold">+${estimatedXP} XP</span>
+                            </div>
+                            ${task.notes ? `<div class="text-[10px] opacity-60 mt-1 truncate" title="${escapeHtml(task.notes)}">${escapeHtml(task.notes)}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="openTaskModal('${task.id}')" class="p-1.5 rounded-lg opacity-70 hover:opacity-100 hover:bg-slate-800"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="completeTask('${task.id}')" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-extrabold text-xs px-2.5 py-1 rounded-lg transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-check"></i> Done
+                        </button>
+                    </div>
+                `;
+
+                if (quadrant === 'q1') q1List.appendChild(card);
+                if (quadrant === 'q2') q2List.appendChild(card);
+                if (quadrant === 'q3') q3List.appendChild(card);
+                if (quadrant === 'q4') q4List.appendChild(card);
+            });
+
+            document.getElementById('count-q1').innerText = `${counts.q1} Tasks`;
+            document.getElementById('count-q2').innerText = `${counts.q2} Tasks`;
+            document.getElementById('count-q3').innerText = `${counts.q3} Tasks`;
+            document.getElementById('count-q4').innerText = `${counts.q4} Tasks`;
+        }
+
+        function calculateTaskXP(task) {
+            let base = Math.round((task.x * task.y) / 100);
+            let timeMult = 1.0;
+            if (task.time === '30m') timeMult = 1.1;
+            if (task.time === '45m') timeMult = 1.2;
+            if (task.time === '1h') timeMult = 1.3;
+            if (task.time === '2h+') timeMult = 1.5;
+
+            let xp = Math.round(base * timeMult) + 15;
+            if (task.type === 'Revision' || task.type === 'Test prep') xp += 10;
+            if (task.deadline) {
+                const now = new Date();
+                const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                if (task.deadline === today) xp += 25;
+            }
+            return Math.max(20, xp);
+        }
+
+        function updateFocusBanner() {
+            if (STATE.tasks.length === 0) {
+                document.getElementById('focus-task-title').innerText = "No active tasks on matrix";
+                document.getElementById('focus-task-coords').innerText = "Add tasks to identify your highest-impact focus target.";
+                document.getElementById('focus-complete-btn').classList.add('hidden');
+                return;
+            }
+
+            let bestTask = null;
+            let minDistance = Infinity;
+
+            STATE.tasks.forEach(task => {
+                const dist = Math.hypot(100 - task.x, 100 - task.y);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    bestTask = task;
+                }
+            });
+
+            if (bestTask) {
+                const estimatedXP = calculateTaskXP(bestTask);
+                document.getElementById('focus-task-title').innerText = bestTask.title;
+                document.getElementById('focus-task-coords').innerText = `${bestTask.subject || 'Other'} · ${bestTask.type || 'Homework'} | Urgency: ${bestTask.x} | Importance: ${bestTask.y} | ${bestTask.time || '1h'} | +${estimatedXP} XP`;
+                const btn = document.getElementById('focus-complete-btn');
+                btn.classList.remove('hidden');
+                btn.onclick = () => completeTask(bestTask.id);
+            }
+        }
+
+        function completeTask(id) {
+            const task = STATE.tasks.find(t => t.id === id);
+            if (!task) return;
+
+            pushUndo('Complete task');
+            const gainedXP = calculateTaskXP(task);
+            STATE.xp += gainedXP;
+            STATE.completedTasks = STATE.completedTasks || [];
+            const completedAt = new Date().toISOString();
+            STATE.completedTasks.push({ ...task, completedAt, earnedXP: gainedXP });
+            recordActivity({ type: 'task_completed', timestamp: completedAt, subject: task.subject || 'Other', taskId: task.id, title: task.title, xpEarned: gainedXP });
+
+            STATE.tasks = STATE.tasks.filter(t => t.id !== id);
+            STATE.scheduleSuggestions = (STATE.scheduleSuggestions || []).filter(s => !(s.sourceType === 'task' && s.sourceId === id));
+            STATE.plannedSessions = (STATE.plannedSessions || []).filter(s => !(s.sourceType === 'task' && s.sourceId === id && s.status === 'planned'));
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 70, spread: 70, origin: { y: 0.7 } });
+            }
+
+            if (STATE.soundEnabled) {
+                playChimeSound();
+            }
+
+            checkLevelUp();
+            saveLocalStorage();
+            renderAll(); renderDashboard(); renderStatistics(); renderAllTasks(); updateUndoButton();
+        }
+
+        function completeFocusTask() {
+            // Handled dynamically inside updateFocusBanner()
+        }
+
+        function getCurrentRank(xp) {
+            let currentRank = LEVEL_RANKS[0];
+            for (let i = 0; i < LEVEL_RANKS.length; i++) {
+                if (xp >= LEVEL_RANKS[i].xpReq) {
+                    currentRank = LEVEL_RANKS[i];
+                }
+            }
+            return currentRank;
+        }
+
+        function getNextRank(xp) {
+            for (let i = 0; i < LEVEL_RANKS.length; i++) {
+                if (xp < LEVEL_RANKS[i].xpReq) {
+                    return LEVEL_RANKS[i];
+                }
+            }
+            return null; // Max rank reached
+        }
+
+        function checkLevelUp() {
+            const curRank = getCurrentRank(STATE.xp);
+            STATE.level = curRank.level;
+
+            document.getElementById('user-level').innerText = `Lvl ${curRank.level} ${curRank.title}`;
+            document.getElementById('streak-count').innerText = STATE.streak;
+
+            const nextRank = getNextRank(STATE.xp);
+            if (nextRank) {
+                const xpInCurrentTier = STATE.xp - curRank.xpReq;
+                const tierRange = nextRank.xpReq - curRank.xpReq;
+                const pct = Math.min(100, Math.round((xpInCurrentTier / tierRange) * 100));
+                document.getElementById('xp-progress-bar').style.width = `${pct}%`;
+            } else {
+                document.getElementById('xp-progress-bar').style.width = `100%`;
+            }
+        }
+
+        function renderXPPage() {
+            const curRank = getCurrentRank(STATE.xp);
+            const nextRank = getNextRank(STATE.xp);
+
+            document.getElementById('xp-tab-level-title').innerText = `Level ${curRank.level}: ${curRank.title}`;
+            document.getElementById('xp-tab-total-val').innerText = `${STATE.xp} XP`;
+
+            if (nextRank) {
+                document.getElementById('xp-tab-next-val').innerText = `${nextRank.xpReq} XP`;
+                const xpInCurrentTier = STATE.xp - curRank.xpReq;
+                const tierRange = nextRank.xpReq - curRank.xpReq;
+                const pct = Math.min(100, Math.round((xpInCurrentTier / tierRange) * 100));
+                document.getElementById('xp-tab-bar').style.width = `${pct}%`;
+                document.getElementById('xp-tab-progress-text').innerText = `${STATE.xp} / ${nextRank.xpReq} XP (${pct}%)`;
+            } else {
+                document.getElementById('xp-tab-next-val').innerText = `MAX RANK`;
+                document.getElementById('xp-tab-bar').style.width = `100%`;
+                document.getElementById('xp-tab-progress-text').innerText = `${STATE.xp} XP (Maximum Rank Reached)`;
+            }
+
+            // Render Ranks Showcase
+            const showcaseContainer = document.getElementById('ranks-showcase-container');
+            showcaseContainer.innerHTML = '';
+
+            LEVEL_RANKS.forEach(rank => {
+                const isUnlocked = STATE.xp >= rank.xpReq;
+                const card = document.createElement('div');
+                card.className = `p-3.5 rounded-2xl border transition-all ${isUnlocked ? 'themed-card-sub border-indigo-500/40' : 'opacity-40 border-slate-800'}`;
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded ${isUnlocked ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-800 text-slate-500'}">Lvl ${rank.level}</span>
+                        <i class="fa-solid ${rank.icon} ${rank.color} text-sm"></i>
+                    </div>
+                    <div class="text-xs font-bold text-white truncate">${rank.title}</div>
+                    <div class="text-[10px] opacity-70 mt-1">${rank.xpReq} XP Required</div>
+                `;
+                showcaseContainer.appendChild(card);
+            });
+
+            // Render Active Tasks XP Table
+            const tableBody = document.getElementById('xp-task-table-body');
+            tableBody.innerHTML = '';
+
+            if (STATE.tasks.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-xs opacity-50">No active tasks on matrix. Create tasks to view potential XP.</td></tr>`;
+                return;
+            }
+
+            STATE.tasks.forEach(task => {
+                let quadrant = 'Q4: Eliminate';
+                if (task.x >= 50 && task.y >= 50) quadrant = 'Q1: Do First';
+                else if (task.x < 50 && task.y >= 50) quadrant = 'Q2: Schedule';
+                else if (task.x >= 50 && task.y < 50) quadrant = 'Q3: Delegate';
+
+                const xpVal = calculateTaskXP(task);
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition-all";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-bold text-white">${task.title}<div class="text-[10px] opacity-60 font-normal">${task.subject || 'Other'} · ${task.type || 'Homework'}</div></td>
+                    <td class="py-2.5 px-3 text-slate-300">${quadrant}</td>
+                    <td class="py-2.5 px-3 text-indigo-400 font-semibold">X:${task.x}, Y:${task.y}</td>
+                    <td class="py-2.5 px-3 opacity-70">${task.time || '1h'}</td>
+                    <td class="py-2.5 px-3 text-right font-black text-amber-400">+${xpVal} XP</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // ---------- v6 dashboard, projects, assisted scheduling and analytics ----------
+        function durationMinutes(value) { const map = { '15m':15, '30m':30, '45m':45, '1h':60, '2h+':120 }; return map[value] || 60; }
+        function minutesLabel(minutes) { const m = Math.max(0, Math.round(Number(minutes) || 0)); return m >= 60 ? `${Math.floor(m/60)}h${m%60 ? ` ${m%60}m` : ''}` : `${m}m`; }
+        function weekStartDate() { const d = startOfToday(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+        function isThisWeek(timestamp) { if (!timestamp) return false; const d = new Date(timestamp); if (Number.isNaN(d.getTime())) return false; const start = weekStartDate(); const end = new Date(start); end.setDate(end.getDate()+7); return d >= start && d < end; }
+        function getWeekActivity() { return (STATE.activityLog || []).filter(e => isThisWeek(e.timestamp)); }
+
+        function renderDashboard() {
+            renderDashboardStats();
+            const dateEl = document.getElementById('dashboard-date-label'); if (dateEl) dateEl.textContent = new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'}) + ' · Your priorities, deadlines and revision at a glance.';
+            const work = getAllWorkItems().filter(w => !w.completed);
+            const priority = [...work].sort((a,b) => workPriority(b)-workPriority(a)).slice(0,5);
+            const list = document.getElementById('dashboard-priority-list'); if (list) { list.innerHTML=''; document.getElementById('dashboard-priority-empty').classList.toggle('hidden', priority.length>0); priority.forEach(item => { const due=dueStatus(item); const row=document.createElement('div'); row.className='themed-card-sub border rounded-xl p-3 flex items-center gap-3'; const action=item.workKind==='task'?`<button onclick="completeTask('${escapeAttr(item.id)}')" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold">Done</button>`:`<button onclick="switchTab('projects')" class="px-3 py-2 themed-card border rounded-lg text-[10px] font-bold">Open</button>`; row.innerHTML=`<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${item.color||'#6366f1'}"></span><div class="flex-1 min-w-0"><div class="text-xs font-bold truncate">${escapeHtml(item.title)}</div><div class="text-[10px] opacity-60 mt-1">${escapeHtml(item.subject||'Other')} · <span class="${due.color}">${escapeHtml(due.label)}</span></div></div>${action}`; list.appendChild(row); }); }
+            const rec=getRecommendedTopic(); const recTitle=document.getElementById('dashboard-next-topic'); const recReason=document.getElementById('dashboard-topic-reason'); if(recTitle) recTitle.textContent=rec?`${rec.topic.subject}: ${rec.topic.name}`:'Add a revision topic to get a recommendation.'; if(recReason) recReason.textContent=rec?rec.reason:'Suggestions use confidence, revision recency and optional exam dates.';
+            const upcoming=document.getElementById('dashboard-upcoming'); if(upcoming){ upcoming.innerHTML=''; const items=work.filter(w=>w.deadline && daysUntilDeadline(w.deadline)<=7).sort((a,b)=>daysUntilDeadline(a.deadline)-daysUntilDeadline(b.deadline)).slice(0,6); document.getElementById('dashboard-upcoming-empty').classList.toggle('hidden',items.length>0); items.forEach(item=>{const due=dueStatus(item);const row=document.createElement('div');row.className='flex items-center justify-between gap-2 themed-card-sub border rounded-xl px-3 py-2';row.innerHTML=`<div class="min-w-0"><div class="text-xs font-bold truncate">${escapeHtml(item.title)}</div><div class="text-[10px] opacity-60">${escapeHtml(item.subject||'Other')}</div></div><span class="text-[10px] font-extrabold shrink-0 ${due.color}">${escapeHtml(due.label)}</span>`;upcoming.appendChild(row);}); }
+            const week=getWeekActivity(); const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+            const completed=week.filter(e=>['task_completed','milestone_completed'].includes(e.type)).length; const revisions=week.filter(e=>e.type==='revision_session').length; const xp=week.reduce((sum,e)=>sum+(Number(e.xpEarned)||0),0); const minutes=week.reduce((sum,e)=>sum+(Number(e.actualMinutes)||0),0);
+            set('home-week-completed',completed);set('home-week-sessions',revisions);set('home-week-xp',xp);set('home-week-time',minutesLabel(minutes));
+        }
+        function workPriority(item) { const days=daysUntilDeadline(item.deadline); const dueBoost=days===null?0:days<0?120:days===0?100:days===1?80:days<=3?55:days<=7?30:10; return dueBoost + (Number(item.x)||50)*0.25 + (Number(item.y)||50)*0.35 + (item.workKind==='milestone'?5:0); }
+        function deleteTask(id) { const task=STATE.tasks.find(t=>t.id===id); if(!task||!confirm(`Delete “${task.title}”? You can undo this action.`))return; pushUndo('Delete task'); STATE.tasks=STATE.tasks.filter(t=>t.id!==id); STATE.scheduleSuggestions=(STATE.scheduleSuggestions||[]).filter(s=>!(s.sourceType==='task'&&s.sourceId===id)); STATE.plannedSessions=(STATE.plannedSessions||[]).filter(s=>!(s.sourceType==='task'&&s.sourceId===id&&s.status==='planned')); recordActivity({type:'task_deleted',timestamp:new Date().toISOString(),subject:task.subject||'Other',taskId:id,title:task.title}); saveLocalStorage(); renderAll(); renderDashboard(); }
+        function restoreCompletedTask(id, completedAt) { const idx=(STATE.completedTasks||[]).findIndex(t=>t.id===id && (!completedAt||t.completedAt===completedAt)); if(idx<0)return; pushUndo('Restore completed task'); const task=STATE.completedTasks[idx]; STATE.completedTasks.splice(idx,1); const restored={...task}; delete restored.completedAt; delete restored.earnedXP; restored.updatedAt=new Date().toISOString(); STATE.tasks.push(restored); STATE.xp=Math.max(0,Number(STATE.xp||0)-(Number(task.earnedXP)||0)); STATE.activityLog=(STATE.activityLog||[]).filter(e=>!(e.type==='task_completed'&&e.taskId===id&&e.timestamp===task.completedAt)); recordActivity({type:'task_restored',timestamp:new Date().toISOString(),subject:task.subject||'Other',taskId:id,title:task.title}); saveLocalStorage(); renderAll(); renderDashboard(); }
+
+        function renderProjects() {
+            const list=document.getElementById('project-list'); if(!list)return; list.innerHTML=''; const projects=STATE.projects||[]; document.getElementById('project-empty').classList.toggle('hidden',projects.length>0);
+            projects.forEach(project=>{const milestones=project.milestones||[];const done=milestones.filter(m=>m.completed).length;const pct=milestones.length?Math.round(done/milestones.length*100):0;const due=dueStatus({deadline:project.deadline});const card=document.createElement('article');card.className='themed-card-sub border rounded-2xl p-4 space-y-3';card.innerHTML=`<div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="text-[10px] uppercase font-extrabold text-indigo-300">${escapeHtml(project.subject||'Other')}</div><h3 class="font-extrabold mt-1 break-words">${escapeHtml(project.title)}</h3>${project.notes?`<p class="text-xs opacity-60 mt-1">${escapeHtml(project.notes)}</p>`:''}</div><button onclick="deleteProject('${escapeAttr(project.id)}')" class="opacity-50 hover:opacity-100 p-1" aria-label="Delete project"><i class="fa-solid fa-trash"></i></button></div><div class="flex items-center justify-between text-[10px]"><span class="${due.color} font-bold">${escapeHtml(due.label)}</span><span class="opacity-60">${done}/${milestones.length} milestones · ${pct}%</span></div><div class="w-full h-2 rounded-full bg-slate-700/50 overflow-hidden"><div class="h-full bg-emerald-500 rounded-full" style="width:${pct}%"></div></div><div class="space-y-2">${milestones.map(m=>`<label class="flex items-start gap-2 text-xs p-2 rounded-lg themed-card border"><input type="checkbox" ${m.completed?'checked':''} onchange="toggleMilestone('${escapeAttr(project.id)}','${escapeAttr(m.id)}',this.checked)" class="mt-0.5 accent-emerald-500"><span class="flex-1 ${m.completed?'line-through opacity-50':''}">${escapeHtml(m.title)}${m.deadline?`<span class="block text-[10px] opacity-50 mt-1">${escapeHtml(dueStatus({deadline:m.deadline}).label)}</span>`:''}</span></label>`).join('')}</div><form onsubmit="addMilestone(event,'${escapeAttr(project.id)}')" class="flex gap-2"><input name="milestoneTitle" required maxlength="120" placeholder="Add a milestone…" class="min-w-0 flex-1 px-3 py-2 rounded-lg themed-card border text-xs"><input name="milestoneDays" type="number" min="0" max="3650" placeholder="Days" title="Due in days (optional)" class="w-20 px-2 py-2 rounded-lg themed-card border text-xs"><button class="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold" type="submit" aria-label="Add milestone"><i class="fa-solid fa-plus"></i></button></form>`;list.appendChild(card);});
+        }
+        function addProject(event) { event.preventDefault();const title=document.getElementById('project-title').value.trim();if(!title)return;const raw=document.getElementById('project-due-days').value;if(raw!==''&&(!Number.isInteger(Number(raw))||Number(raw)<0||Number(raw)>3650)){alert('Enter a whole number of days between 0 and 3650.');return;}pushUndo('Create project');const project={id:createId('project'),title,subject:document.getElementById('project-subject').value,deadline:deadlineFromDays(raw),notes:document.getElementById('project-notes').value.trim(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),milestones:[]};STATE.projects=STATE.projects||[];STATE.projects.push(project);recordActivity({type:'project_created',timestamp:new Date().toISOString(),subject:project.subject,projectId:project.id,title});event.target.reset();saveLocalStorage();renderProjects();renderDashboard(); }
+        function addMilestone(event, projectId) { event.preventDefault();const project=(STATE.projects||[]).find(p=>p.id===projectId);if(!project)return;const form=event.target;const title=form.elements.milestoneTitle.value.trim();const raw=form.elements.milestoneDays.value;if(!title)return;if(raw!==''&&(!Number.isInteger(Number(raw))||Number(raw)<0||Number(raw)>3650)){alert('Enter a whole number of days between 0 and 3650.');return;}pushUndo('Add project milestone');project.milestones=project.milestones||[];project.milestones.push({id:createId('milestone'),title,deadline:deadlineFromDays(raw),completed:false,createdAt:new Date().toISOString(),time:'30m'});project.updatedAt=new Date().toISOString();recordActivity({type:'milestone_created',timestamp:new Date().toISOString(),subject:project.subject,projectId:project.id,title});saveLocalStorage();renderProjects();renderAllTasks();renderDashboard(); }
+        function toggleMilestone(projectId,milestoneId,checked) { const project=(STATE.projects||[]).find(p=>p.id===projectId);const milestone=project?.milestones?.find(m=>m.id===milestoneId);if(!project||!milestone)return;pushUndo(milestone.completed?'Reopen milestone':'Complete milestone');const next=typeof checked==='boolean'?checked:!milestone.completed;milestone.completed=next;milestone.updatedAt=new Date().toISOString();if(next){const now=new Date().toISOString();const xp=milestone.xpAwarded?0:10;if(!milestone.xpAwarded){milestone.xpAwarded=true;STATE.xp=Number(STATE.xp||0)+xp;}recordActivity({type:'milestone_completed',timestamp:now,subject:project.subject,projectId,milestoneId,title:milestone.title,xpEarned:xp});checkLevelUp();}saveLocalStorage();renderProjects();renderAllTasks();renderDashboard();renderStatistics(); }
+        function deleteProject(id) { const project=(STATE.projects||[]).find(p=>p.id===id);if(!project||!confirm(`Delete project “${project.title}” and its milestones?`))return;pushUndo('Delete project');STATE.projects=STATE.projects.filter(p=>p.id!==id);STATE.plannedSessions=(STATE.plannedSessions||[]).filter(s=>s.projectId!==id);saveLocalStorage();renderProjects();renderAllTasks();renderDashboard(); }
+
+        const DAY_NAMES=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        function defaultAvailability() { return {1:{enabled:true,start:'16:00',end:'19:00'},2:{enabled:true,start:'16:00',end:'19:00'},3:{enabled:true,start:'16:00',end:'19:00'},4:{enabled:true,start:'16:00',end:'19:00'},5:{enabled:true,start:'16:00',end:'19:00'},6:{enabled:true,start:'10:00',end:'13:00'},0:{enabled:true,start:'10:00',end:'13:00'}}; }
+        function timeMinutes(t) { const parts=String(t||'').split(':').map(Number);return parts.length===2?parts[0]*60+parts[1]:0; }
+        function renderAvailabilityEditor() { const el=document.getElementById('availability-editor');if(!el)return;STATE.availability=STATE.availability||defaultAvailability();el.innerHTML='';DAY_NAMES.forEach((name,index)=>{const day=(index+1)%7;const a=STATE.availability[day]||{enabled:false,start:'16:00',end:'18:00'};const row=document.createElement('div');row.className='grid grid-cols-12 gap-2 items-center themed-card-sub border rounded-xl p-2';row.innerHTML=`<label class="col-span-4 sm:col-span-3 flex items-center gap-2 text-xs font-bold"><input type="checkbox" data-day="${day}" data-field="enabled" ${a.enabled?'checked':''} class="accent-indigo-500">${name}</label><input aria-label="${name} start time" type="time" data-day="${day}" data-field="start" value="${escapeAttr(a.start)}" class="col-span-4 sm:col-span-4 px-2 py-2 rounded-lg themed-card border text-xs"><input aria-label="${name} end time" type="time" data-day="${day}" data-field="end" value="${escapeAttr(a.end)}" class="col-span-4 sm:col-span-5 px-2 py-2 rounded-lg themed-card border text-xs">`;el.appendChild(row);}); }
+        function saveAvailabilityFromForm() { const fields=[...document.querySelectorAll('#availability-editor [data-day]')];const next={};fields.forEach(input=>{const day=input.dataset.day;next[day]=next[day]||{enabled:false,start:'16:00',end:'18:00'};if(input.dataset.field==='enabled')next[day].enabled=input.checked;else next[day][input.dataset.field]=input.value;});for(const day of Object.keys(next)){if(next[day].enabled&&timeMinutes(next[day].end)<=timeMinutes(next[day].start)){alert(`${DAY_NAMES[(Number(day)+6)%7]} must end after it starts.`);return;}}pushUndo('Update study availability');STATE.availability=next;saveLocalStorage();const msg=document.getElementById('suggestion-message');if(msg)msg.textContent='Availability saved. Generate suggestions to build a new draft plan.'; }
+        function generateScheduleSuggestions() {
+            saveAvailabilitySilentlyFromForm();
+            const availability = STATE.availability || defaultAvailability();
+            const tasks = (STATE.tasks || []).map(t => ({ sourceType:'task', sourceId:t.id, title:t.title, subject:t.subject||'Other', deadline:t.deadline||'', minutes:durationMinutes(t.time), x:t.x||50, y:t.y||50 }));
+            const milestones = [];
+            (STATE.projects||[]).forEach(project => (project.milestones||[]).filter(m=>!m.completed).forEach(m=>milestones.push({sourceType:'milestone',sourceId:m.id,projectId:project.id,title:`${project.title}: ${m.title}`,subject:project.subject||'Other',deadline:m.deadline||project.deadline||'',minutes:durationMinutes(m.time||'30m'),x:60,y:70})));
+            const topics = (STATE.revisionTopics||[]).filter(t => {
+                if (Number(t.confidence||3)<=3 || !t.lastRevised) return true;
+                const last=new Date(t.lastRevised);
+                return !Number.isNaN(last.getTime()) && Math.floor((startOfToday()-new Date(last.getFullYear(),last.getMonth(),last.getDate()))/86400000)>=5;
+            }).map(t=>({sourceType:'topic',sourceId:t.id,title:`Revise: ${t.name}`,subject:t.subject||'Other',deadline:t.examDate||'',minutes:30,x:45,y:65,confidence:t.confidence||3}));
+            const items=tasks.concat(milestones,topics).sort((a,b)=>{
+                const da=daysUntilDeadline(a.deadline),db=daysUntilDeadline(b.deadline);
+                const deadlineA=da===null?999:Math.max(-30,da),deadlineB=db===null?999:Math.max(-30,db);
+                return deadlineA-deadlineB || b.y-a.y || b.x-a.x;
+            });
+            const now=startOfToday();
+            const reserved={};
+            (STATE.plannedSessions||[]).filter(s=>s.status==='planned').forEach(s=>{reserved[s.date]=reserved[s.date]||[];reserved[s.date].push({start:timeMinutes(s.start),end:timeMinutes(s.end)});});
+            const suggestions=[];
+            const already=new Set((STATE.plannedSessions||[]).filter(s=>s.status==='planned').map(s=>`${s.sourceType}:${s.sourceId}`));
+            for(const item of items){
+                if(already.has(`${item.sourceType}:${item.sourceId}`))continue;
+                let placed=null;
+                for(let offset=0;offset<7&&!placed;offset++){
+                    const date=new Date(now);date.setDate(date.getDate()+offset);const day=date.getDay();const a=availability[day];if(!a||!a.enabled)continue;
+                    const key=dateKey(date),start=timeMinutes(a.start),end=timeMinutes(a.end),mins=Math.max(15,Math.min(120,item.minutes));
+                    const deadlineDays=daysUntilDeadline(item.deadline);if(deadlineDays!==null&&deadlineDays>=0&&offset>deadlineDays)continue;
+                    const busy=[...(reserved[key]||[])].sort((x,y)=>x.start-y.start);let at=start;
+                    for(const slot of busy){if(at+mins<=slot.start)break;if(at<slot.end&&at+mins>slot.start)at=slot.end+10;}
+                    if(at+mins>end)continue;
+                    placed={id:createId('suggestion'),sourceType:item.sourceType,sourceId:item.sourceId,projectId:item.projectId||null,title:item.title,subject:item.subject,date:key,start:minutesToTime(at),end:minutesToTime(at+mins),estimatedMinutes:mins,status:'suggested'};
+                    reserved[key]=reserved[key]||[];reserved[key].push({start:at,end:at+mins});
+                }
+                if(placed)suggestions.push(placed);
+            }
+            pushUndo('Generate schedule suggestions');STATE.scheduleSuggestions=suggestions;saveLocalStorage();renderStudyPlan();
+            const msg=document.getElementById('suggestion-message');if(msg)msg.textContent=suggestions.length?`Drafted ${suggestions.length} suggestions. Accepted sessions were treated as busy times. Accept the ones that fit your week; these are not scheduled yet.`:'No sessions fit the current availability and deadlines. Extend your available times or reduce the work to schedule.';
+        }
+        function saveAvailabilitySilentlyFromForm() { const editor=document.getElementById('availability-editor');if(!editor)return;const next={};editor.querySelectorAll('[data-day]').forEach(input=>{const day=input.dataset.day;next[day]=next[day]||{enabled:false,start:'16:00',end:'18:00'};if(input.dataset.field==='enabled')next[day].enabled=input.checked;else next[day][input.dataset.field]=input.value;});for(const day of Object.keys(next)){if(next[day].enabled&&timeMinutes(next[day].end)<=timeMinutes(next[day].start)){alert(`${DAY_NAMES[(Number(day)+6)%7]} must end after it starts.`);return;}}STATE.availability=next; }
+        function minutesToTime(min) { return `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`; }
+        function acceptSuggestion(id) { const suggestion=(STATE.scheduleSuggestions||[]).find(s=>s.id===id);if(!suggestion)return;const conflict=(STATE.plannedSessions||[]).some(s=>s.status!=='dismissed'&&s.date===suggestion.date&&s.status!=='completed'&&timeMinutes(s.start)<timeMinutes(suggestion.end)&&timeMinutes(s.end)>timeMinutes(suggestion.start));if(conflict){alert('That time conflicts with an accepted session. Change your availability and generate suggestions again.');return;}pushUndo('Accept study session');STATE.plannedSessions=STATE.plannedSessions||[];STATE.plannedSessions.push({...suggestion,id:createId('session'),status:'planned',acceptedAt:new Date().toISOString()});STATE.scheduleSuggestions=STATE.scheduleSuggestions.filter(s=>s.id!==id);saveLocalStorage();renderStudyPlan();renderDashboard(); }
+        function dismissSuggestion(id) { pushUndo('Dismiss schedule suggestion');STATE.scheduleSuggestions=(STATE.scheduleSuggestions||[]).filter(s=>s.id!==id);saveLocalStorage();renderStudyPlan(); }
+        function completeStudySession(id) { const session=(STATE.plannedSessions||[]).find(s=>s.id===id);if(!session||session.status==='completed')return;const input=document.getElementById('actual-minutes-'+id);const raw=input?input.value:'';let actualMinutes=null;if(raw.trim()!==''){actualMinutes=Number(raw);if(!Number.isInteger(actualMinutes)||actualMinutes<1||actualMinutes>600){alert('Enter actual minutes as a whole number between 1 and 600, or leave blank.');return;}}pushUndo('Complete study session');const timestamp=new Date().toISOString();session.status='completed';session.completedAt=timestamp;session.actualMinutes=actualMinutes;const xp=8;STATE.xp=Number(STATE.xp||0)+xp;recordActivity({type:session.sourceType==='topic'?'revision_session':'study_session_completed',timestamp,subject:session.subject,title:session.title,sourceId:session.sourceId,xpEarned:xp,actualMinutes});if(session.sourceType==='topic'){const topic=(STATE.revisionTopics||[]).find(t=>t.id===session.sourceId);if(topic){topic.revisionHistory=topic.revisionHistory||[];topic.revisionHistory.push({id:createId('revision'),timestamp,score:null,xpEarned:xp,actualMinutes});topic.lastRevised=timestamp;topic.revised=true;topic.lastXpAwardDate=dateKey(startOfToday());}}checkLevelUp();saveLocalStorage();renderStudyPlan();renderDashboard();renderRevisionTopics();renderStatistics(); }
+        function renderStudyPlan() { renderAvailabilityEditor();const suggestionsEl=document.getElementById('schedule-suggestions-list');if(!suggestionsEl)return;suggestionsEl.innerHTML='';const suggestions=STATE.scheduleSuggestions||[];document.getElementById('suggestion-count').textContent=`${suggestions.length} suggestion${suggestions.length===1?'':'s'}`;suggestions.forEach(s=>{const row=document.createElement('div');row.className='themed-card-sub border rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3';row.innerHTML=`<div class="flex-1 min-w-0"><div class="font-bold text-xs">${escapeHtml(s.title)}</div><div class="text-[10px] opacity-60 mt-1">${escapeHtml(s.subject)} · ${escapeHtml(s.date)} · ${escapeHtml(s.start)}–${escapeHtml(s.end)} · ${s.estimatedMinutes}m</div></div><div class="flex gap-2"><button onclick="acceptSuggestion('${escapeAttr(s.id)}')" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold">Accept</button><button onclick="dismissSuggestion('${escapeAttr(s.id)}')" class="px-3 py-2 rounded-lg border themed-card text-xs font-bold">Dismiss</button></div>`;suggestionsEl.appendChild(row);});const sessionsEl=document.getElementById('planned-session-list');sessionsEl.innerHTML='';const sessions=[...(STATE.plannedSessions||[])].sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));document.getElementById('planned-session-empty').classList.toggle('hidden',sessions.length>0);sessions.forEach(s=>{const row=document.createElement('div');row.className='themed-card-sub border rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3';const complete=s.status==='completed';row.innerHTML=`<div class="flex-1 min-w-0"><div class="font-bold text-xs ${complete?'line-through opacity-50':''}">${escapeHtml(s.title)}</div><div class="text-[10px] opacity-60 mt-1">${escapeHtml(s.subject)} · ${escapeHtml(s.date)} · ${escapeHtml(s.start)}–${escapeHtml(s.end)} · estimated ${s.estimatedMinutes}m${s.actualMinutes?` · actual ${s.actualMinutes}m`:''}</div></div>${complete?'<span class="text-emerald-400 text-xs font-bold">Completed</span>':`<div class="flex items-center gap-2"><input id="actual-minutes-${escapeAttr(s.id)}" type="number" min="1" max="600" placeholder="Actual min" title="Optional actual minutes studied" class="w-24 px-2 py-2 rounded-lg themed-card border text-xs"><button onclick="completeStudySession('${escapeAttr(s.id)}')" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold">Complete</button></div>`}<button onclick="removePlannedSession('${escapeAttr(s.id)}')" class="px-3 py-2 rounded-lg border themed-card text-xs font-bold">Remove</button>`;sessionsEl.appendChild(row);}); }
+        function removePlannedSession(id) { pushUndo('Remove planned session');STATE.plannedSessions=(STATE.plannedSessions||[]).filter(s=>s.id!==id);saveLocalStorage();renderStudyPlan(); }
+
+        function renderStatistics() { const week=getWeekActivity();const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};set('stats-completed',week.filter(e=>['task_completed','milestone_completed'].includes(e.type)).length);set('stats-revision',week.filter(e=>e.type==='revision_session').length);set('stats-xp',week.reduce((n,e)=>n+(Number(e.xpEarned)||0),0));set('stats-time',minutesLabel(week.reduce((n,e)=>n+(Number(e.actualMinutes)||0),0)));const weekStart=dateKey(weekStartDate());const weekEndDate=new Date(weekStartDate());weekEndDate.setDate(weekEndDate.getDate()+7);const weekEnd=dateKey(weekEndDate);const planned=(STATE.plannedSessions||[]).filter(s=>s.date>=weekStart&&s.date<weekEnd);set('stats-sessions-planned',planned.length);set('stats-sessions-completed',planned.filter(s=>s.status==='completed').length);const subjects={};week.forEach(e=>{if(e.subject)subjects[e.subject]=(subjects[e.subject]||0)+1;});const subjectEl=document.getElementById('stats-subjects');if(subjectEl){subjectEl.innerHTML='';const entries=Object.entries(subjects).sort((a,b)=>b[1]-a[1]);if(!entries.length)subjectEl.innerHTML='<p class="text-xs opacity-55">No recorded activity this week yet.</p>';entries.forEach(([name,count])=>{const row=document.createElement('div');row.innerHTML=`<div class="flex justify-between text-xs mb-1"><span>${escapeHtml(name)}</span><span class="font-bold">${count}</span></div><div class="h-2 rounded-full bg-slate-700/50 overflow-hidden"><div class="h-full bg-indigo-500 rounded-full" style="width:${Math.min(100,count/Math.max(...entries.map(e=>e[1]))*100)}%"></div></div>`;subjectEl.appendChild(row);});}const daily=document.getElementById('stats-daily');if(daily){daily.innerHTML='';const start=weekStartDate();for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);const key=dateKey(d);const count=week.filter(e=>dateKey(new Date(e.timestamp))===key).length;const row=document.createElement('div');row.className='flex items-center gap-3';row.innerHTML=`<span class="w-10 text-[10px] opacity-60">${d.toLocaleDateString(undefined,{weekday:'short'})}</span><div class="flex-1 h-2 rounded-full bg-slate-700/50 overflow-hidden"><div class="h-full bg-emerald-500 rounded-full" style="width:${Math.min(100,count*20)}%"></div></div><span class="text-[10px] font-bold w-5 text-right">${count}</span>`;daily.appendChild(row);}} }
+
+        function playChimeSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.25);
+            } catch(e) {}
+        }
+
+        function exportBackup() {
+            const payload = JSON.stringify({ ...STATE, schemaVersion: 7, backupFormat: 'studyquest', exportedAt: new Date().toISOString() }, null, 2);
+            const blob = new Blob([payload], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `studyquest-v7-backup-${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+            const status = document.getElementById('backup-status'); if (status) status.textContent = 'v7 backup exported with tasks, topics, projects, schedules, activity history and settings.';
+        }
+        function normalizeState(parsed) {
+            const base = { schemaVersion:7, tasks:[], revisionTopics:[], completedTasks:[], projects:[], plannedSessions:[], scheduleSuggestions:[], activityLog:[], availability:defaultAvailability(), preferences:{lastTab:'dashboard'}, xp:0, level:1, streak:1, soundEnabled:true, theme:'theme-slate' };
+            const out = { ...base, ...parsed }; out.schemaVersion=7;
+            out.tasks=Array.isArray(parsed.tasks)?parsed.tasks.map(t=>({type:'Homework',subject:'Other',notes:'',color:'#6366f1',x:50,y:50,time:'1h',...t,createdAt:t.createdAt||null,updatedAt:t.updatedAt||null})):[];
+            out.revisionTopics=Array.isArray(parsed.revisionTopics)?parsed.revisionTopics.map(t=>({confidence:3,revisionHistory:[],confidenceHistory:[],examDate:'',...t,revisionHistory:Array.isArray(t.revisionHistory)?t.revisionHistory:[],confidenceHistory:Array.isArray(t.confidenceHistory)?t.confidenceHistory:[]})):[];
+            out.completedTasks=Array.isArray(parsed.completedTasks)?parsed.completedTasks:[];
+            out.projects=Array.isArray(parsed.projects)?parsed.projects.map(p=>({...p,milestones:Array.isArray(p.milestones)?p.milestones:[]})):[];
+            out.plannedSessions=Array.isArray(parsed.plannedSessions)?parsed.plannedSessions:[];out.scheduleSuggestions=Array.isArray(parsed.scheduleSuggestions)?parsed.scheduleSuggestions:[];out.activityLog=Array.isArray(parsed.activityLog)?parsed.activityLog:[];
+            out.availability=parsed.availability&&typeof parsed.availability==='object'?parsed.availability:defaultAvailability();out.preferences={...base.preferences,...(parsed.preferences||{})};
+            out.xp=Math.max(0,Number(parsed.xp)||0);out.level=Math.max(1,Number(parsed.level)||1);out.streak=Math.max(1,Number(parsed.streak)||1);out.soundEnabled=parsed.soundEnabled!==false;out.theme=['theme-slate','theme-oled','theme-cyberpunk','theme-pastel','theme-neon'].includes(parsed.theme)?parsed.theme:'theme-slate';return out;
+        }
+        function importBackupFile(event) {
+            const file = event.target.files && event.target.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = () => { try { const parsed=JSON.parse(String(reader.result||'{}')); if(!parsed||!Array.isArray(parsed.tasks)||!Array.isArray(parsed.revisionTopics))throw new Error('Invalid backup');if(!confirm('Import this backup and replace the planner data currently saved in this browser? A recovery backup will be downloaded first.'))return;exportRecoveryBackup();pushUndo('Import backup');const normalized=normalizeState(parsed);Object.keys(STATE).forEach(k=>delete STATE[k]);Object.assign(STATE,normalized);setTheme(STATE.theme);document.getElementById('sound-toggle-checkbox').checked=STATE.soundEnabled;saveLocalStorage();renderAll();renderRevisionTopics();renderProjects();renderStudyPlan();renderStatistics();document.getElementById('backup-status').textContent='Backup imported and migrated to the v6 format successfully.'; } catch(error){document.getElementById('backup-status').textContent='Could not import that file. Existing planner data has not been replaced.';} finally{event.target.value='';} }; reader.readAsText(file);
+        }
+        function exportRecoveryBackup() { try { const blob=new Blob([JSON.stringify({...STATE,schemaVersion:6,backupFormat:'studyquest-recovery',exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`studyquest-v7-recovery-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){} }
+
+        // Theme Customizer
+        function setTheme(themeName) {
+            if (!['theme-slate','theme-oled','theme-cyberpunk','theme-pastel','theme-neon'].includes(themeName)) themeName='theme-slate';
+            document.body.className = `${themeName} min-h-screen flex flex-col antialiased`;
+            STATE.theme = themeName; saveLocalStorage();
+        }
+        function toggleSound(enabled) { STATE.soundEnabled = !!enabled; saveLocalStorage(); }
+
+        // Local-first persistence. Keep the v5 and legacy keys updated for backward recovery.
+        function saveLocalStorage() {
+            STATE.schemaVersion = 7;
+            const raw = JSON.stringify(STATE);
+            try { localStorage.setItem('studyquest_v7_data', raw); localStorage.setItem('studyquest_v6_data', raw); localStorage.setItem('studyquest_v5_data', raw); localStorage.setItem('eisenhower_v4_data', raw); }
+            catch (error) { const status=document.getElementById('backup-status'); if(status)status.textContent='Could not save to browser storage. Export a backup and free some browser storage space.'; console.error('StudyQuest save failed',error); }
+            updateUndoButton();
+            if (window.StudyQuestCloud && typeof window.StudyQuestCloud.onLocalSave === 'function') window.StudyQuestCloud.onLocalSave(raw);
+        }
+        function loadLocalStorage() {
+            let raw=null; try { raw=localStorage.getItem('studyquest_v7_data')||localStorage.getItem('studyquest_v6_data')||localStorage.getItem('studyquest_v5_data')||localStorage.getItem('eisenhower_v4_data'); } catch(e) {}
+            if(raw){try{const parsed=JSON.parse(raw);const normalized=normalizeState(parsed);Object.keys(STATE).forEach(k=>delete STATE[k]);Object.assign(STATE,normalized);if(!parsed.schemaVersion||parsed.schemaVersion<7){saveLocalStorage();const status=document.getElementById('backup-status');if(status)status.textContent='Your previous StudyQuest data was upgraded to v7. Export a backup to keep a separate copy.';}}catch(e){console.error('StudyQuest data could not be loaded',e);}}
+            else { STATE.availability=defaultAvailability(); }
+            document.body.className=`${STATE.theme||'theme-slate'} min-h-screen flex flex-col antialiased`;
+            const sound=document.getElementById('sound-toggle-checkbox');if(sound)sound.checked=STATE.soundEnabled!==false;
+        }
+        function renderAll() {
+            renderGraphNodes(); renderQuadrantCards(); renderDashboardStats(); renderAllTasks(); updateFocusBanner(); checkLevelUp();
+            if (!document.getElementById('tab-xp').classList.contains('hidden')) renderXPPage();
+            renderDashboard(); renderRevisionTopics(); renderProjects(); renderStudyPlan(); renderStatistics(); updateUndoButton();
+        }
+    </script>
+
+<script>
+(() => {
+  'use strict';
+  const CONFIG_KEY='studyquest_v74_supabase_config';
+  const BASELINE_KEY='studyquest_v74_cloud_baseline';
+  const LAST_SYNC_KEY='studyquest_v74_last_sync';
+  let client=null, currentUser=null, syncBusy=false, pendingRemote=null, saveTimer=null;
+  const $=id=>document.getElementById(id);
+  const status=msg=>{const el=$('sq-cloud-status');if(el)el.textContent=msg;};
+  const getState=()=>{try{return JSON.parse(localStorage.getItem('studyquest_v7_data')||localStorage.getItem('studyquest_v6_data')||'{}');}catch(e){return {};}};
+  const stable=o=>JSON.stringify(o,(key,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.keys(value).sort().reduce((out,k)=>(out[k]=value[k],out),{}):value);
+  const setBaseline=data=>{localStorage.setItem(BASELINE_KEY,stable(data));localStorage.setItem(LAST_SYNC_KEY,new Date().toISOString());};
+  const getBaseline=()=>{try{return localStorage.getItem(BASELINE_KEY);}catch(e){return null;}};
+  const setButtons=loggedIn=>{['sq-cloud-sync','sq-cloud-logout'].forEach(id=>{if($(id))$(id).disabled=!loggedIn;});};
+  function showConflict(remoteData){pendingRemote=remoteData;$('sq-cloud-conflict')?.classList.remove('hidden');}
+  function hideConflict(){$('sq-cloud-conflict')?.classList.add('hidden');pendingRemote=null;}
+  function applyState(data){
+    if(!data||!Array.isArray(data.tasks)||!Array.isArray(data.revisionTopics))throw new Error('The cloud record does not look like valid StudyQuest data.');
+    const normalized=typeof normalizeState==='function'?normalizeState(data):data;
+    Object.keys(STATE).forEach(k=>delete STATE[k]);Object.assign(STATE,normalized);STATE.schemaVersion=7;
+    try{document.body.className=`${STATE.theme||'theme-slate'} min-h-screen flex flex-col antialiased`;}catch(e){}
+    const sound=$('sound-toggle-checkbox');if(sound)sound.checked=STATE.soundEnabled!==false;
+    const raw=JSON.stringify(STATE);localStorage.setItem('studyquest_v7_data',raw);localStorage.setItem('studyquest_v6_data',raw);localStorage.setItem('studyquest_v5_data',raw);localStorage.setItem('eisenhower_v4_data',raw);
+    if(typeof renderAll==='function')renderAll();
+  }
+  async function getCloudRow(){const {data,error}=await client.from('studyquest_data').select('user_id,data,updated_at').eq('user_id',currentUser.id).maybeSingle();if(error)throw error;return data;}
+  async function putCloudRow(data){const row={user_id:currentUser.id,data,updated_at:new Date().toISOString()};const {error}=await client.from('studyquest_data').upsert(row,{onConflict:'user_id'});if(error)throw error;setBaseline(data);status('Synced just now. This account is connected on this device.');}
+  async function syncNow(){
+    if(!client||!currentUser){status('Connect the service and sign in first.');return;}
+    if(syncBusy)return;syncBusy=true;const btn=$('sq-cloud-sync');if(btn)btn.disabled=true;status('Checking cloud and local changes…');
+    try{
+      const local=getState();const localText=stable(local);const baseline=getBaseline();const remoteRow=await getCloudRow();
+      if(!remoteRow){if(confirm('No StudyQuest cloud data exists for this account yet. Upload the data on this device to create it?')){await putCloudRow(local);}else status('No cloud data created. Your local data is unchanged.');return;}
+      const remote=remoteRow.data;const remoteText=stable(remote);const localChanged=baseline===null?localText!==stable({}):localText!==baseline;const remoteChanged=baseline===null?true:remoteText!==baseline;
+      if(baseline===null){
+        const localHasData=(local.tasks||[]).length||(local.revisionTopics||[]).length||(local.projects||[]).length||(local.xp||0)>0;
+        if(localHasData){showConflict(remote);status('First sync: both this device and cloud have data. Choose which copy to keep.');return;}
+        applyState(remote);setBaseline(remote);status('Downloaded your cloud data to this device.');return;
+      }
+      if(localChanged&&remoteChanged&&localText!==remoteText){showConflict(remote);status('Conflict found. Choose which copy to keep; no changes have been overwritten.');return;}
+      if(remoteChanged&&!localChanged){applyState(remote);setBaseline(remote);status('Downloaded the latest changes from the cloud.');return;}
+      if(localChanged&&(!remoteChanged||localText===remoteText)){await putCloudRow(local);return;}
+      setBaseline(local);status('Already up to date.');
+    }catch(e){console.error('StudyQuest cloud sync failed',e);status('Sync failed: '+(e.message||'check your project URL, key, sign-in and database setup.'));}
+    finally{syncBusy=false;if(btn)btn.disabled=!currentUser;}
+  }
+  function onLocalSave(raw){if(!client||!currentUser)return;clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{
+    if(!client||!currentUser)return;
+    // If a manual sync is in progress, retry instead of silently dropping this autosave.
+    if(syncBusy){onLocalSave(raw);return;}
+    try{
+      // Read the newest persisted state when the timer fires, not a potentially stale snapshot.
+      const local=getState();const baseline=getBaseline();
+      if(baseline===null){status('Local changes saved on this device. Press “Sync now” to safely connect this data with the cloud.');return;}
+      const remoteRow=await getCloudRow();if(!remoteRow){status('Local changes saved on this device. Press “Sync now” to create cloud data.');return;}
+      const remoteText=stable(remoteRow.data);const localText=stable(local);
+      if(remoteText!==baseline&&localText!==baseline&&remoteText!==localText){showConflict(remoteRow.data);status('Cloud changes detected on another device. Resolve the conflict before syncing more changes.');return;}
+      if(localText!==baseline){await putCloudRow(local);}
+    }catch(e){console.warn('Background sync paused:',e);status('Saved on this device. Cloud sync needs attention: '+(e.message||'unknown error'));}
+  },syncBusy?2000:1400);}
+  async function connect(){
+    const url=$('sq-cloud-url').value.trim().replace(/\/$/,'');const key=$('sq-cloud-key').value.trim();
+    if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)||!key){status('Enter your Supabase project URL and public anon/publishable key.');return;}
+    if(!window.supabase||!window.supabase.createClient){status('Could not load the Supabase client library. Check your internet connection.');return;}
+    localStorage.setItem(CONFIG_KEY,JSON.stringify({url,key}));client=window.supabase.createClient(url,key);status('Service connected on this device. Sign up or sign in to continue.');
+    const {data,error}=await client.auth.getSession();if(error)status('Connected, but session check failed: '+error.message);else if(data.session){currentUser=data.session.user;setButtons(true);status('Signed in as '+currentUser.email+'. Press “Sync now” to reconcile this device.');}
+  }
+  async function auth(mode){
+    if(!client){status('Press “Connect service” first.');return;}
+    const email=$('sq-cloud-email').value.trim();const password=$('sq-cloud-password').value;
+    if(!email||password.length<8){status('Enter a valid email and a password of at least 8 characters.');return;}
+    status(mode==='signup'?'Creating account…':'Signing in…');
+    const result=mode==='signup'?await client.auth.signUp({email,password}):await client.auth.signInWithPassword({email,password});
+    if(result.error){status((mode==='signup'?'Account creation failed: ':'Sign-in failed: ')+result.error.message);return;}
+    currentUser=result.data.session?.user||null;
+    if(!currentUser){setButtons(false);status(mode==='signup'?'Account request received. Check your email for a confirmation link, then sign in.':'Sign-in did not create a session. Check your credentials and email confirmation settings.');return;}
+    setButtons(true);status('Signed in as '+(currentUser.email||email)+'. Press “Sync now” to safely choose or sync your data.');
+  }
+  async function logout(){if(client)await client.auth.signOut();currentUser=null;setButtons(false);hideConflict();status('Signed out. Local data remains on this device.');}
+  function init(){
+    let config=null;try{config=JSON.parse(localStorage.getItem(CONFIG_KEY)||'null');}catch(e){}
+    if(config){$('sq-cloud-url').value=config.url||'';$('sq-cloud-key').value=config.key||'';}
+    $('sq-cloud-connect')?.addEventListener('click',connect);
+    $('sq-cloud-signup')?.addEventListener('click',()=>auth('signup'));
+    $('sq-cloud-login')?.addEventListener('click',()=>auth('login'));
+    $('sq-cloud-sync')?.addEventListener('click',syncNow);
+    $('sq-cloud-logout')?.addEventListener('click',logout);
+    $('sq-cloud-use-remote')?.addEventListener('click',()=>{try{applyState(pendingRemote);setBaseline(pendingRemote);hideConflict();status('Cloud copy applied to this device.');}catch(e){status('Could not apply cloud copy: '+e.message);}});
+    $('sq-cloud-use-local')?.addEventListener('click',async()=>{hideConflict();try{await putCloudRow(getState());}catch(e){status('Could not upload local copy: '+e.message);}});
+    if(config&&window.supabase?.createClient){client=window.supabase.createClient(config.url,config.key);client.auth.getSession().then(({data,error})=>{if(error){status('Saved connection found, but sign-in needs attention: '+error.message);return;}if(data.session){currentUser=data.session.user;setButtons(true);status('Signed in as '+currentUser.email+'. Press “Sync now” to check cloud data.');}}).catch(e=>status('Could not restore session: '+e.message));}
+    setButtons(false);
+  }
+  window.StudyQuestCloud={onLocalSave};
+  window.addEventListener('DOMContentLoaded',init);
+})();
+</script>
+<div id="sq-update-notice" role="status" aria-live="polite" style="display:none;position:fixed;z-index:99999;left:16px;right:16px;bottom:18px;margin:auto;max-width:560px;padding:14px 16px;border:1px solid #475569;border-radius:16px;background:#0f172a;color:#f8fafc;box-shadow:0 12px 36px #0008;font:14px/1.45 Inter,system-ui,sans-serif">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:180px"><strong style="display:block;margin-bottom:3px">StudyQuest update ready</strong><span>A new version is ready. Refresh when you're ready; save any unfinished changes first.</span></div>
+    <button id="sq-update-reload" type="button" style="border:0;border-radius:10px;padding:10px 14px;background:#6366f1;color:white;font-weight:700;cursor:pointer">Update now</button>
+    <button id="sq-update-later" type="button" aria-label="Dismiss update notice" style="border:1px solid #475569;border-radius:10px;padding:9px 12px;background:transparent;color:#e2e8f0;cursor:pointer">Later</button>
+  </div>
+</div>
+<script>
+(() => {
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+  let registration = null, reloadForUpdate = false;
+  const notice = () => document.getElementById('sq-update-notice');
+  const showUpdate = () => { if (notice()) notice().style.display = 'block'; };
+  const hideUpdate = () => { if (notice()) notice().style.display = 'none'; };
+  window.addEventListener('load', async () => {
+    try {
+      registration = await navigator.serviceWorker.register('./service-worker.js');
+      if (registration.waiting && navigator.serviceWorker.controller) showUpdate();
+      registration.addEventListener('updatefound', () => {
+        const installing = registration.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', () => {
+          if (installing.state === 'installed' && navigator.serviceWorker.controller) showUpdate();
+        });
+      });
+      const checkUpdate = () => registration.update().catch(() => {});
+      document.getElementById('sq-update-reload')?.addEventListener('click', () => {
+        const waiting = registration && registration.waiting;
+        if (!waiting) { checkUpdate(); return; }
+        reloadForUpdate = true;
+        waiting.postMessage({type:'SKIP_WAITING'});
+      });
+      document.getElementById('sq-update-later')?.addEventListener('click', hideUpdate);
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloadForUpdate) location.reload();
+      });
+      window.addEventListener('focus', checkUpdate);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
+      window.setInterval(checkUpdate, 60 * 60 * 1000);
+    } catch (err) {
+      console.warn('StudyQuest update support could not be enabled:', err);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
