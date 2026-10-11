@@ -1,14 +1,10 @@
-const CACHE_NAME = 'studyquest-v75-shell-v1';
+const CACHE_NAME = 'studyquest-v75-shell-v2';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
 self.addEventListener('install', event => {
-  // Keep this worker waiting until the user chooses to update, so open work is not interrupted.
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)));
-});
-
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+  // Activate new versions automatically; the page persists app data locally before this can reload.
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
@@ -37,13 +33,11 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Prefer fresh same-origin assets so a new deployment cannot be masked by old cached files.
   event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(response => {
-        if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(req, response.clone())).catch(() => {});
-        return response;
-      });
-    })
+    fetch(req).then(response => {
+      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(req, response.clone())).catch(() => {});
+      return response;
+    }).catch(() => caches.match(req))
   );
 });
