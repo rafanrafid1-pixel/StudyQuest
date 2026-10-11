@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V8.0 — Quality of Life Update</title>
+    <title>StudyQuest V8.1 — Quality of Life Update</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -279,7 +279,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
-                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v8.0</span>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v8.1</span>
                     </div>
                     <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
                 </div>
@@ -342,9 +342,6 @@
                     </button>
                     <button type="button" onclick="switchTab('tasks')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
                         <span class="home-shortcut-icon bg-amber-500/15 text-amber-400"><i class="fa-solid fa-list-check text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">All Tasks</span><span class="block text-xs opacity-60 mt-1">Deadlines, homework and to-dos</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
-                    </button>
-                    <button type="button" onclick="switchTab('updates')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
-                        <span class="home-shortcut-icon bg-emerald-500/15 text-emerald-400"><i class="fa-solid fa-clock-rotate-left text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">Update Log</span><span class="block text-xs opacity-60 mt-1">What's new in each version</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </button>
                     <button type="button" onclick="switchTab('xp')" class="home-shortcut themed-card border rounded-2xl p-4 text-left flex items-center gap-4 group">
                         <span class="home-shortcut-icon bg-purple-500/15 text-purple-400"><i class="fa-solid fa-trophy text-lg"></i></span><span class="min-w-0 flex-1"><span class="block font-extrabold">XP & Levels</span><span class="block text-xs opacity-60 mt-1">Your rank, rewards and progress</span></span><i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
@@ -516,7 +513,7 @@
                         <h2 class="text-2xl font-black flex items-center gap-3"><i class="fa-solid fa-list-check text-amber-400"></i> All Tasks</h2>
                         <p class="text-sm opacity-70 mt-1">Your active homework, revision, coursework and to-dos. Project milestones stay in Projects to keep this list focused.</p>
                     </div>
-                    <button onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0"><i class="fa-solid fa-plus mr-1"></i> New task</button>
+                    <div class="flex flex-wrap gap-2 shrink-0"><button type="button" onclick="switchTab('graph')" class="themed-card-sub border px-4 py-2.5 rounded-xl text-xs font-extrabold hover:border-indigo-400"><i class="fa-solid fa-chart-line mr-1"></i> Back to Matrix</button><button onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0"><i class="fa-solid fa-plus mr-1"></i> New task</button></div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     <input id="task-search" type="search" oninput="renderAllTasks()" placeholder="Search tasks and notes…" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
@@ -753,6 +750,7 @@
                     <div class="flex flex-wrap gap-2 pt-3" role="tablist" aria-label="Settings sections">
                         <button type="button" role="tab" aria-selected="true" onclick="switchSettingsPanel('general')" id="settings-tab-general" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-indigo-600 text-white">General</button>
                         <button type="button" role="tab" aria-selected="false" onclick="switchSettingsPanel('cloud')" id="settings-tab-cloud" class="px-4 py-2 rounded-xl text-xs font-extrabold themed-card-sub border">Cloud &amp; Account</button>
+                        <button type="button" role="tab" aria-selected="false" onclick="switchSettingsPanel('updates')" id="settings-tab-updates" class="px-4 py-2 rounded-xl text-xs font-extrabold themed-card-sub border">Update Log</button>
                     </div>
                 </div>
 
@@ -855,11 +853,7 @@
                 </section>
 
                 </div>
-            </div>
-        </div>
-
-        <!-- TAB: VERSION HISTORY -->
-        <div id="tab-updates" class="hidden space-y-6">
+                <div id="settings-panel-updates" class="hidden space-y-4">
             <section class="themed-card rounded-3xl p-5 sm:p-8 border shadow-xl space-y-5">
                 <div>
                     <h2 class="text-2xl font-black flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> StudyQuest Update Log</h2>
@@ -867,8 +861,8 @@
                 </div>
                 <div class="space-y-4">
                     <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
-                        <h3 class="text-base font-black text-indigo-300">V8.0 — Quality of Life Update <span class="text-[10px] font-bold opacity-60">IN DEVELOPMENT</span></h3>
-                        <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Direct Matrix-to-All-Tasks navigation.</li><li>Project milestones remain in Projects, keeping All Tasks focused.</li><li>Student-focused Matrix quadrants with clearly directed urgency and importance axes.</li><li>Cloud and account controls moved into Settings → Cloud &amp; Account.</li><li>Rebuilt version history and updated Matrix guide.</li></ul>
+                        <h3 class="text-base font-black text-indigo-300">V8.1 — Quality of Life Update <span class="text-[10px] font-bold opacity-60">IN DEVELOPMENT</span></h3>
+                        <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Direct navigation both ways between Matrix and All Tasks.</li><li>Project milestones remain in Projects, keeping All Tasks focused.</li><li>Student-focused Matrix quadrants with clearly directed urgency and importance axes.</li><li>Cloud and account controls moved into Settings → Cloud &amp; Account.</li><li>Update Log is now accessible as a tab inside Settings.</li><li>Rebuilt version history and updated Matrix guide.</li></ul>
                     </article>
                     <article class="themed-card-sub border rounded-2xl p-4 sm:p-5 space-y-3">
                         <h3 class="text-base font-black">V7 — Mobile Update</h3>
@@ -906,7 +900,10 @@
                     </article>
                 </div>
             </section>
+                </div>
+            </div>
         </div>
+
     </main>
 
     <!-- TASK CREATION / EDIT MODAL -->
@@ -1039,7 +1036,7 @@
 
         // Tab Navigation Switcher
         function switchTab(tabId) {
-            const tabIds = ['dashboard', 'graph', 'tasks', 'revision', 'plan', 'projects', 'stats', 'xp', 'guide', 'settings', 'updates'];
+            const tabIds = ['dashboard', 'graph', 'tasks', 'revision', 'plan', 'projects', 'stats', 'xp', 'guide', 'settings'];
             tabIds.forEach(id => {
                 const el = document.getElementById(`tab-${id}`);
                 const btn = document.getElementById(`nav-${id}-btn`);
@@ -1071,22 +1068,28 @@
             if (tabId === 'plan') renderStudyPlan();
             if (tabId === 'projects') renderProjects();
             if (tabId === 'stats') renderStatistics();
-            if (tabId === 'updates') document.title = 'StudyQuest V8.0 — Quality of Life Update';
+            if (tabId === 'settings') switchSettingsPanel('general');
         }
 
         function switchSettingsPanel(panel) {
-            const general = document.getElementById('settings-panel-general');
-            const cloud = document.getElementById('settings-panel-cloud');
-            const generalTab = document.getElementById('settings-tab-general');
-            const cloudTab = document.getElementById('settings-tab-cloud');
-            if (!general || !cloud || !generalTab || !cloudTab) return;
-            const showCloud = panel === 'cloud';
-            general.classList.toggle('hidden', showCloud);
-            cloud.classList.toggle('hidden', !showCloud);
-            generalTab.className = 'px-4 py-2 rounded-xl text-xs font-extrabold ' + (!showCloud ? 'bg-indigo-600 text-white' : 'themed-card-sub border');
-            cloudTab.className = 'px-4 py-2 rounded-xl text-xs font-extrabold ' + (showCloud ? 'bg-indigo-600 text-white' : 'themed-card-sub border');
-            generalTab.setAttribute('aria-selected', String(!showCloud));
-            cloudTab.setAttribute('aria-selected', String(showCloud));
+            const panels = {
+                general: document.getElementById('settings-panel-general'),
+                cloud: document.getElementById('settings-panel-cloud'),
+                updates: document.getElementById('settings-panel-updates')
+            };
+            const tabs = {
+                general: document.getElementById('settings-tab-general'),
+                cloud: document.getElementById('settings-tab-cloud'),
+                updates: document.getElementById('settings-tab-updates')
+            };
+            if (!panels.general || !panels.cloud || !panels.updates || !tabs.general || !tabs.cloud || !tabs.updates) return;
+            if (!panels[panel]) panel = 'general';
+            Object.keys(panels).forEach(key => {
+                const active = key === panel;
+                panels[key].classList.toggle('hidden', !active);
+                tabs[key].className = 'px-4 py-2 rounded-xl text-xs font-extrabold ' + (active ? 'bg-indigo-600 text-white' : 'themed-card-sub border');
+                tabs[key].setAttribute('aria-selected', String(active));
+            });
         }
 
         // Modal Handlers
