@@ -1951,10 +1951,19 @@
     $('sq-cloud-login')?.addEventListener('click',()=>auth('login'));
     $('sq-cloud-sync')?.addEventListener('click',syncNow);
     $('sq-cloud-logout')?.addEventListener('click',logout);
+    window.addEventListener('online',queueResumeSync);
+    window.addEventListener('focus',queueResumeSync);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')queueResumeSync();});
     $('sq-cloud-use-remote')?.addEventListener('click',()=>{try{applyState(pendingRemote);setBaseline(pendingRemote);hideConflict();status('Cloud copy applied to this device.');}catch(e){status('Could not apply cloud copy: '+e.message);}});
     $('sq-cloud-use-local')?.addEventListener('click',async()=>{hideConflict();try{await putCloudRow(getState());}catch(e){status('Could not upload local copy: '+e.message);}});
-    if(config&&window.supabase?.createClient){client=window.supabase.createClient(config.url,config.key);client.auth.getSession().then(({data,error})=>{if(error){status('Saved connection found, but sign-in needs attention: '+error.message);return;}if(data.session){currentUser=data.session.user;setButtons(true);status('Signed in as '+currentUser.email+'. Press “Sync now” to check cloud data.');}}).catch(e=>status('Could not restore session: '+e.message));}
+    if(config&&window.supabase?.createClient){client=window.supabase.createClient(config.url,config.key);client.auth.getSession().then(({data,error})=>{if(error){status('Saved connection found, but sign-in needs attention: '+error.message);return;}if(data.session){currentUser=data.session.user;setButtons(true);status('Signed in as '+currentUser.email+'. Checking for cloud changes…');if(getBaseline()!==null)queueResumeSync();}}).catch(e=>status('Could not restore session: '+e.message));}
     setButtons(false);
+  }
+  let resumeSyncTimer=null;
+  function queueResumeSync(){
+    if(!client||!currentUser||getBaseline()===null||syncBusy)return;
+    clearTimeout(resumeSyncTimer);
+    resumeSyncTimer=setTimeout(()=>{if(client&&currentUser&&!syncBusy&&getBaseline()!==null)syncNow();},700);
   }
   window.StudyQuestCloud={onLocalSave};
   window.addEventListener('DOMContentLoaded',init);
@@ -1970,35 +1979,36 @@
 <script>
 (() => {
   if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
-  let registration = null, reloadForUpdate = false;
-  const notice = () => document.getElementById('sq-update-notice');
-  const showUpdate = () => { if (notice()) notice().style.display = 'block'; };
-  const hideUpdate = () => { if (notice()) notice().style.display = 'none'; };
+  let registration = null, reloadScheduled = false;
+  const applyWaitingUpdate = worker => {
+    if (!worker || reloadScheduled) return;
+    reloadScheduled = true;
+    worker.postMessage({type:'SKIP_WAITING'});
+  };
   window.addEventListener('load', async () => {
     try {
       registration = await navigator.serviceWorker.register('./service-worker.js');
-      if (registration.waiting && navigator.serviceWorker.controller) showUpdate();
+      // Apply a waiting update automatically; no reinstall or file download is required.
+      if (registration.waiting && navigator.serviceWorker.controller) applyWaitingUpdate(registration.waiting);
       registration.addEventListener('updatefound', () => {
         const installing = registration.installing;
         if (!installing) return;
         installing.addEventListener('statechange', () => {
-          if (installing.state === 'installed' && navigator.serviceWorker.controller) showUpdate();
+          if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+            applyWaitingUpdate(registration.waiting || installing);
+          }
         });
       });
       const checkUpdate = () => registration.update().catch(() => {});
-      document.getElementById('sq-update-reload')?.addEventListener('click', () => {
-        const waiting = registration && registration.waiting;
-        if (!waiting) { checkUpdate(); return; }
-        reloadForUpdate = true;
-        waiting.postMessage({type:'SKIP_WAITING'});
-      });
-      document.getElementById('sq-update-later')?.addEventListener('click', hideUpdate);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (reloadForUpdate) location.reload();
+        if (!reloadScheduled) reloadScheduled = true;
+        // The browser reloads once under the newly activated worker.
+        location.reload();
       });
       window.addEventListener('focus', checkUpdate);
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
-      window.setInterval(checkUpdate, 60 * 60 * 1000);
+      window.addEventListener('online', checkUpdate);
+      window.setInterval(checkUpdate, 30 * 60 * 1000);
     } catch (err) {
       console.warn('StudyQuest update support could not be enabled:', err);
     }
