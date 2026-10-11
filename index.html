@@ -418,7 +418,7 @@
                     
                     <!-- Background Quadrant Labels & Colors -->
                     <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none">
-                        <!-- Q2: Schedule (Top-Left) -->
+                        <!-- Q2: Plan Revision (Top-Left) -->
                         <div class="p-3 bg-blue-500/5 border-r border-b border-slate-800/60 flex flex-col justify-between">
                             <span class="text-xs font-black uppercase text-blue-400/70 tracking-wider">Q2: Plan Revision</span>
                             <span class="text-[10px] opacity-40 font-semibold">Top-Left</span>
@@ -428,12 +428,12 @@
                             <span class="text-xs font-black uppercase text-red-400/80 tracking-wider text-right">Q1: Do First</span>
                             <span class="text-[10px] opacity-40 font-semibold">Top-Right</span>
                         </div>
-                        <!-- Q4: Eliminate (Bottom-Left) -->
+                        <!-- Q4: Optional / Later (Bottom-Left) -->
                         <div class="p-3 bg-slate-500/5 border-r border-slate-800/60 flex flex-col justify-between">
                             <span class="text-[10px] opacity-40 font-semibold">Bottom-Left</span>
                             <span class="text-xs font-black uppercase opacity-60 tracking-wider">Q4: Optional / Later</span>
                         </div>
-                        <!-- Q3: Delegate (Bottom-Right) -->
+                        <!-- Q3: Quick Actions (Bottom-Right) -->
                         <div class="p-3 bg-amber-500/5 flex flex-col justify-between items-end">
                             <span class="text-[10px] opacity-40 font-semibold">Bottom-Right</span>
                             <span class="text-xs font-black uppercase text-amber-400/70 tracking-wider text-right">Q3: Quick Actions</span>
@@ -873,10 +873,12 @@
                     <article class="themed-card-sub border rounded-2xl p-4 sm:p-5 space-y-3">
                         <h3 class="text-base font-black">V7 — Mobile Update</h3>
                         <ul class="text-xs opacity-75 space-y-1 list-disc list-inside"><li>Responsive layouts and touch-friendly controls for phones and tablets.</li><li>Mobile bottom navigation and a usable Matrix on smaller screens.</li></ul>
-                        <div class="ml-2 sm:ml-4 themed-card border rounded-xl p-3 space-y-2">
-                            <div class="text-xs font-bold opacity-75">V7.4 — Web &amp; Cloud Update</div>
-                            <p class="text-xs opacity-65">Hosted web app, PWA setup, account sign-in, Supabase cloud sync, and compatibility with existing local data.</p>
-                            <div class="themed-card-sub border rounded-lg p-3 space-y-2">
+                        <div class="ml-2 sm:ml-4 space-y-2">
+                            <div class="themed-card border rounded-xl p-3 space-y-1">
+                                <div class="text-xs font-bold opacity-75">V7.4 — Web &amp; Cloud Update</div>
+                                <p class="text-xs opacity-65">Hosted web app, PWA setup, account sign-in, Supabase cloud sync, and compatibility with existing local data.</p>
+                            </div>
+                            <div class="themed-card border rounded-xl p-3 space-y-2">
                                 <div class="text-xs font-bold opacity-70">V7.5 — Automatic Updates</div>
                                 <p class="text-xs opacity-60">Service-worker update checks, update activation, and improved retry behaviour.</p>
                                 <div class="bg-slate-500/5 border rounded-lg p-2"><div class="text-[11px] font-bold opacity-60">V7.5.1 — Maintenance Patch</div><p class="text-[11px] opacity-55 mt-1">The previous update log did not include detailed patch notes; this entry is kept nested under V7.5 without guessing its changes.</p></div>
@@ -893,6 +895,10 @@
                         <h3 class="text-base font-black">V5 — Matrix Update</h3>
                         <p class="text-xs opacity-75">Introduced the urgency-versus-importance Matrix and improved task prioritisation and Matrix usability.</p>
                         <div class="ml-2 sm:ml-4 bg-slate-500/5 border rounded-xl p-3"><div class="text-xs font-bold opacity-60">V5.2 — Bug Fixes</div><p class="text-xs opacity-55 mt-1">Bug-fixing release to improve reliability.</p></div>
+                    </article>
+                    <article class="themed-card-sub border rounded-2xl p-4 sm:p-5">
+                        <h3 class="text-base font-black opacity-70">V4 — Historical Release</h3>
+                        <p class="text-xs opacity-60 mt-2">The previous update log did not contain verified V4 release notes. This placeholder keeps the version sequence visible without inventing features.</p>
                     </article>
                     <article class="themed-card-sub border rounded-2xl p-4 sm:p-5">
                         <h3 class="text-base font-black opacity-70">V3 — Earlier Foundations</h3>
