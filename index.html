@@ -515,11 +515,14 @@
                     </div>
                     <div class="flex flex-wrap gap-2 shrink-0"><button type="button" onclick="switchTab('graph')" class="themed-card-sub border px-4 py-2.5 rounded-xl text-xs font-extrabold hover:border-indigo-400"><i class="fa-solid fa-chart-line mr-1"></i> Back to Matrix</button><button onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0"><i class="fa-solid fa-plus mr-1"></i> New task</button></div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-1"><div class="themed-card-sub border rounded-2xl p-3"><div class="text-[10px] uppercase font-bold opacity-60">Active tasks</div><div id="tasks-overview-active" class="text-xl font-black text-indigo-400">0</div></div><div class="themed-card-sub border rounded-2xl p-3"><div class="text-[10px] uppercase font-bold opacity-60">Due today / overdue</div><div id="tasks-overview-due" class="text-xl font-black text-amber-400">0</div></div><div class="themed-card-sub border rounded-2xl p-3"><div class="text-[10px] uppercase font-bold opacity-60">Recurring routines</div><div id="tasks-overview-recurring" class="text-xl font-black text-violet-400">0</div></div><div class="themed-card-sub border rounded-2xl p-3"><div class="text-[10px] uppercase font-bold opacity-60">Completed occurrences</div><div id="tasks-overview-completed" class="text-xl font-black text-emerald-400">0</div></div></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
                     <input id="task-search" type="search" oninput="renderAllTasks()" placeholder="Search tasks and notes…" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
                     <select id="task-filter-subject" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All subjects</option><option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option></select>
                     <select id="task-filter-type" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All task types</option><option>Homework</option><option>Revision</option><option>Project</option><option>Coursework</option><option>Test prep</option><option>Other</option></select>
                     <select id="task-filter-status" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="active">Active work</option><option value="completed">Completed history</option><option value="all">All statuses</option></select>
+                    <select id="task-filter-repeat" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="all">All schedules</option><option value="recurring">Recurring only</option><option value="once">One-time tasks</option></select>
+                    <select id="task-sort" onchange="renderAllTasks()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><option value="due">Sort: due date</option><option value="priority">Sort: priority</option><option value="title">Sort: title</option></select>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold opacity-80">
                     <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> 4+ days left</span>
@@ -527,6 +530,7 @@
                     <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> 1 day, today or overdue</span>
                 </div>
                 <div id="all-task-list" class="space-y-3"></div>
+                <details id="completed-history-panel" class="hidden themed-card-sub border rounded-2xl p-4 space-y-3"><summary class="cursor-pointer select-none flex items-center justify-between gap-3 font-extrabold text-sm"><span><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i>Completed history</span><span id="completed-history-count" class="text-xs opacity-60">0</span></summary><p class="text-xs opacity-60">Finished occurrences stay here. Recurring tasks keep their history while the next occurrence remains active above.</p><div id="completed-task-list" class="space-y-2"></div></details>
                 <div id="all-task-empty" class="hidden text-center py-12 themed-card-sub rounded-2xl border border-dashed">
                     <i class="fa-solid fa-clipboard-check text-3xl opacity-30"></i>
                     <p class="font-bold mt-3">No active tasks</p>
@@ -975,6 +979,14 @@
                     <div id="deadline-rec-text" class="text-[11px] opacity-70 font-medium">Enter the number of days until the deadline to calculate recommended Urgency (X axis).</div>
                 </div>
 
+                <div class="p-4 themed-card-sub rounded-2xl border space-y-3">
+                    <label class="flex items-center gap-2 text-xs font-extrabold"><input id="input-repeat-enabled" type="checkbox" onchange="toggleRecurringFields()" class="accent-indigo-500"> Repeat this task</label>
+                    <div id="recurring-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><label for="input-repeat-weeks" class="block text-[10px] font-extrabold uppercase mb-1">Repeat every (weeks)</label><input id="input-repeat-weeks" type="number" min="1" max="52" step="1" value="1" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-55 mt-1">Choose 1 for weekly, 2 for fortnightly, and so on.</p></div>
+                        <div><label for="input-repeat-start" class="block text-[10px] font-extrabold uppercase mb-1">First / next due date</label><input id="input-repeat-start" type="date" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-55 mt-1">The schedule stays anchored to its due dates, even if you finish late.</p></div>
+                    </div>
+                </div>
+
                 <!-- Sliders: Urgency X and Importance Y -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -1113,6 +1125,10 @@
                     document.getElementById('importance-val').innerText = t.y;
                     document.getElementById('input-time').value = t.time || '1h';
                     document.getElementById('input-due-days').value = t.deadline ? daysUntilDeadline(t.deadline) : '';
+                    document.getElementById('input-repeat-enabled').checked = !!t.recurrence?.enabled;
+                    document.getElementById('input-repeat-weeks').value = Math.max(1, Math.min(52, Number(t.recurrence?.intervalWeeks) || 1));
+                    document.getElementById('input-repeat-start').value = t.deadline || dateKey(startOfToday());
+                    toggleRecurringFields();
                     selectTimeBadge(t.time || '1h');
                     if (t.deadline) calculateDeadlineUrgency();
                     document.getElementById('modal-title').innerText = "Edit Matrix Task";
@@ -1125,12 +1141,23 @@
                 document.getElementById('input-notes').value = '';
                 selectTimeBadge('1h');
                 document.getElementById('input-due-days').value = '';
+                document.getElementById('input-repeat-enabled').checked = false;
+                document.getElementById('input-repeat-weeks').value = 1;
+                document.getElementById('input-repeat-start').value = dateKey(startOfToday());
+                toggleRecurringFields();
                 document.getElementById('deadline-rec-text').innerText = "Enter the number of days until the deadline to calculate recommended Urgency (X axis).";
                 document.getElementById('apply-urgency-btn').classList.add('hidden');
                 STATE.recommendedX = null;
             }
 
             modal.classList.remove('hidden');
+        }
+
+        function toggleRecurringFields() {
+            const enabled = !!document.getElementById('input-repeat-enabled')?.checked;
+            document.getElementById('recurring-fields')?.classList.toggle('hidden', !enabled);
+            const due = document.getElementById('input-due-days');
+            if (due) due.disabled = enabled;
         }
 
         function closeTaskModal() {
@@ -1239,13 +1266,18 @@
             const x = parseInt(document.getElementById('input-urgency').value);
             const y = parseInt(document.getElementById('input-importance').value);
             const time = document.getElementById('input-time').value;
-            const deadline = deadlineFromDays(document.getElementById('input-due-days').value);
+            const repeatEnabled = !!document.getElementById('input-repeat-enabled').checked;
+            const repeatWeeks = Math.max(1, Math.min(52, Number.parseInt(document.getElementById('input-repeat-weeks').value, 10) || 1));
+            const repeatStart = document.getElementById('input-repeat-start').value;
+            if (repeatEnabled && (!/^\\d{4}-\\d{2}-\\d{2}$/.test(repeatStart) || Number.isNaN(new Date(repeatStart + 'T12:00:00').getTime()))) { alert('Choose a valid first due date for this recurring task.'); return; }
+            const deadline = repeatEnabled ? repeatStart : deadlineFromDays(document.getElementById('input-due-days').value);
 
             const existingIndex = STATE.tasks.findIndex(t => t.id === id);
             if (document.getElementById('input-due-days').value !== '' && (!Number.isInteger(Number(document.getElementById('input-due-days').value)) || Number(document.getElementById('input-due-days').value) < (document.getElementById('task-id').value ? -3650 : 0) || Number(document.getElementById('input-due-days').value) > 3650)) { alert('Enter a valid whole number of days. New tasks must be due today or later.'); return; }
             pushUndo(existingIndex > -1 ? 'Edit task' : 'Create task');
             const previous = existingIndex > -1 ? STATE.tasks[existingIndex] : null;
-            const taskData = { ...(previous || {}), id, title, type, subject, notes, color, x, y, time, deadline, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+            const recurrence = repeatEnabled ? { enabled:true, intervalWeeks:repeatWeeks, seriesId:previous?.recurrence?.seriesId || id, startDate:previous?.recurrence?.startDate || repeatStart, occurrenceNumber:Math.max(1, Number(previous?.recurrence?.occurrenceNumber) || 1) } : null;
+            const taskData = { ...(previous || {}), id, title, type, subject, notes, color, x, y, time, deadline, recurrence, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
 
             if (existingIndex > -1) STATE.tasks[existingIndex] = taskData;
             else STATE.tasks.push(taskData);
