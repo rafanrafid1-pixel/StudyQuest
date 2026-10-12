@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v832-modal-scroll-v1';
+const CACHE_NAME = 'studyquest-v832-modal-scroll-v2';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
