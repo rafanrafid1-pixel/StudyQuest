@@ -2155,7 +2155,6 @@
         function setTheme(themeName) {
             if (!['theme-slate','theme-oled','theme-cyberpunk','theme-pastel','theme-neon'].includes(themeName)) themeName='theme-slate';
             document.body.className = `${themeName} min-h-screen flex flex-col antialiased`;
-            if (typeof window.sqApplyAppearance === "function") window.sqApplyAppearance();
             if (typeof window.sqApplyAppearance === 'function') window.sqApplyAppearance();
             STATE.theme = themeName; saveLocalStorage();
         }
