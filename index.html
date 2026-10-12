@@ -325,6 +325,10 @@
         .sq-setting-control input[type="color"] { padding: 4px; cursor: pointer; }
         .sq-setting-toggle { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.85rem 0; border-top:1px solid var(--border-color); }
         .sq-setting-toggle input { accent-color: var(--sq-accent); width:18px; height:18px; }
+        .bg-indigo-600 { background-color: var(--sq-accent) !important; }
+        .hover\\:bg-indigo-500:hover { background-color: color-mix(in srgb, var(--sq-accent) 82%, white) !important; }
+        .text-indigo-400, .text-indigo-300 { color: var(--sq-accent) !important; }
+
         @media (max-width: 640px) {
             .themed-card, .themed-card-sub { border-radius: min(var(--sq-radius), 18px); }
             #tab-settings > .themed-card { padding: 1rem; }
@@ -2151,6 +2155,7 @@
         function setTheme(themeName) {
             if (!['theme-slate','theme-oled','theme-cyberpunk','theme-pastel','theme-neon'].includes(themeName)) themeName='theme-slate';
             document.body.className = `${themeName} min-h-screen flex flex-col antialiased`;
+            if (typeof window.sqApplyAppearance === "function") window.sqApplyAppearance();
             STATE.theme = themeName; saveLocalStorage();
         }
         function toggleSound(enabled) { STATE.soundEnabled = !!enabled; saveLocalStorage(); }
