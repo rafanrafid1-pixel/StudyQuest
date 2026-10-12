@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V8.3 — Quality of Life Update</title>
+    <title>StudyQuest V8.3.1 — Quality of Life Update</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -279,7 +279,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
-                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v8.3</span>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v8.3.1</span>
                     </div>
                     <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
                 </div>
@@ -869,6 +869,7 @@
                         <h3 class="text-base font-black text-indigo-300">V8 — Quality of Life Update</h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Project milestones stay in Projects; Matrix axes and quadrants are clearer.</li><li>Cloud &amp; Account controls and Update Log are organised inside Settings.</li><li>Direct navigation between Matrix and All Tasks.</li></ul>
                         <div class="ml-2 sm:ml-4 space-y-2">
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V8.3.1 — Flexible Estimates &amp; Smarter Priorities</div><p class="text-xs opacity-65">Enter any estimated duration with minutes, hours, days, weeks or months. Workload-aware deadline urgency and suggested importance consider task type, difficulty and effort, while manual Matrix controls remain available.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V8.3 — Weekly Insights &amp; Task Overview</div><p class="text-xs opacity-65">All Tasks gains an overview, recurring-task filters, sorting, and a collapsible completed history. Weekly review highlights completions, XP, recurring completions and active routines.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V8.2 — Recurring Tasks</div><p class="text-xs opacity-65">Tasks can repeat every 1–52 weeks from a chosen due date. Completing an occurrence records its history, awards XP once, and schedules the next occurrence on the original cadence.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-75">V8.1 — Navigation &amp; Update Log</div><p class="text-xs opacity-65">Added direct navigation both ways between Matrix and All Tasks, and moved Update Log into its own tab inside Settings.</p></div>
@@ -931,13 +932,13 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Task Type</label>
-                        <select id="input-type" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
+                        <select id="input-type" onchange="updatePriorityRecommendations()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
                             <option value="Homework">Homework</option><option value="Revision">Revision</option><option value="Project">Project</option><option value="Coursework">Coursework</option><option value="Test prep">Test preparation</option><option value="Other">Other</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Subject</label>
-                        <select id="input-subject" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
+                        <select id="input-subject" onchange="updatePriorityRecommendations()" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs">
                             <option>Maths</option><option>English Language</option><option>English Literature</option><option>Biology</option><option>Chemistry</option><option>Physics</option><option>Combined Science</option><option>History</option><option>Geography</option><option>French</option><option>Spanish</option><option>Computer Science</option><option>Art & Design</option><option>Business</option><option>Design & Technology</option><option>Drama</option><option>Music</option><option>PE</option><option>RE</option><option>Other</option>
                         </select>
                     </div>
@@ -956,28 +957,19 @@
                     </div>
                 </div>
 
-                <!-- Time Estimate Badges -->
-                <div>
-                    <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Time Estimate</label>
-                    <div class="grid grid-cols-5 gap-1.5" id="time-badge-container">
-                        <button type="button" onclick="selectTimeBadge('15m')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">15m</button>
-                        <button type="button" onclick="selectTimeBadge('30m')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">30m</button>
-                        <button type="button" onclick="selectTimeBadge('45m')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">45m</button>
-                        <button type="button" onclick="selectTimeBadge('1h')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border border-indigo-500 bg-indigo-600/20 text-indigo-300">1h</button>
-                        <button type="button" onclick="selectTimeBadge('2h+')" class="time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500">2h+</button>
+                <div class="p-3 themed-card-sub rounded-2xl border space-y-2">
+                    <label class="block text-xs font-extrabold uppercase tracking-wider">Estimated effort</label>
+                    <div class="grid grid-cols-[minmax(0,1fr)_minmax(110px,0.8fr)] gap-2">
+                        <input id="input-time-amount" type="number" min="1" max="100000" step="1" value="1" required oninput="updatePriorityRecommendations()" aria-label="Estimated time amount" class="min-w-0 w-full px-3 py-2.5 rounded-xl themed-card border text-xs">
+                        <select id="input-time-unit" onchange="updatePriorityRecommendations()" aria-label="Estimated time unit" class="min-w-0 w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><option value="minutes">Minutes</option><option value="hours" selected>Hours</option><option value="days">Days</option><option value="weeks">Weeks</option><option value="months">Months</option></select>
                     </div>
+                    <p class="text-[10px] opacity-60">Use a whole number. Estimates use 24 hours per day, 7 days per week and 30 days per month.</p>
                     <input type="hidden" id="input-time" value="1h">
                 </div>
 
-                <!-- Relative deadline and urgency recommendation -->
-                <div class="p-3 themed-card-sub rounded-2xl border space-y-2">
-                    <label for="input-due-days" class="block text-xs font-extrabold text-indigo-400 uppercase tracking-wider">Due in how many days?</label>
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="input-due-days" min="-3650" max="3650" step="1" placeholder="e.g. 3 (leave blank if no deadline)" oninput="calculateDeadlineUrgency()" class="min-w-0 flex-1 px-3 py-2 rounded-xl themed-card border text-xs">
-                        <button type="button" onclick="applyRecommendedUrgency()" id="apply-urgency-btn" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-2 rounded-xl font-bold">Apply Rec</button>
-                    </div>
-                    <div class="text-[10px] opacity-60">Enter 0 for today, 1 for tomorrow, 2 for two days from now. Leave blank if there is no deadline.</div>
-                    <div id="deadline-rec-text" class="text-[11px] opacity-70 font-medium">Enter the number of days until the deadline to calculate recommended Urgency (X axis).</div>
+                <div class="p-3 themed-card-sub rounded-2xl border space-y-3">
+                    <div><label for="input-due-days" class="block text-xs font-extrabold text-indigo-400 uppercase tracking-wider">Due in how many days?</label><div class="flex items-center gap-2 mt-1"><input type="number" id="input-due-days" min="-3650" max="3650" step="1" placeholder="e.g. 3 (leave blank if no deadline)" oninput="updatePriorityRecommendations()" class="min-w-0 flex-1 px-3 py-2 rounded-xl themed-card border text-xs"><button type="button" onclick="applyRecommendedUrgency()" id="apply-urgency-btn" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-2 rounded-xl font-bold">Apply urgency</button></div><div class="text-[10px] opacity-60 mt-1">Enter 0 for today; leave blank if there is no deadline.</div><div id="deadline-rec-text" class="text-[11px] opacity-70 font-medium">Add a deadline to get a workload-aware urgency recommendation.</div></div>
+                    <div><label for="input-difficulty" class="block text-xs font-extrabold uppercase tracking-wider">Difficulty / annoyance (1–5)</label><div class="flex items-center gap-2 mt-1"><select id="input-difficulty" onchange="updatePriorityRecommendations()" class="min-w-0 flex-1 px-3 py-2 rounded-xl themed-card border text-xs"><option value="1">1 — Very easy</option><option value="2">2 — Easy</option><option value="3" selected>3 — Moderate</option><option value="4">4 — Difficult</option><option value="5">5 — Very difficult / annoying</option></select><button type="button" onclick="applyRecommendedImportance()" id="apply-importance-btn" class="hidden bg-violet-600 hover:bg-violet-500 text-white text-xs px-3 py-2 rounded-xl font-bold">Apply importance</button></div><div id="importance-rec-text" class="text-[11px] opacity-70 mt-1">Importance considers task type, difficulty and effort. Subject is context, not an automatic penalty.</div></div>
                 </div>
 
                 <div class="p-4 themed-card-sub rounded-2xl border space-y-3">
@@ -1124,14 +1116,15 @@
                     document.getElementById('input-importance').value = t.y;
                     document.getElementById('urgency-val').innerText = t.x;
                     document.getElementById('importance-val').innerText = t.y;
-                    document.getElementById('input-time').value = t.time || '1h';
+                    setTimeEstimate(t.time || '1h');
                     document.getElementById('input-due-days').value = t.deadline ? daysUntilDeadline(t.deadline) : '';
                     document.getElementById('input-repeat-enabled').checked = !!t.recurrence?.enabled;
                     document.getElementById('input-repeat-weeks').value = Math.max(1, Math.min(52, Number(t.recurrence?.intervalWeeks) || 1));
                     document.getElementById('input-repeat-start').value = t.deadline || dateKey(startOfToday());
                     toggleRecurringFields();
-                    selectTimeBadge(t.time || '1h');
-                    if (t.deadline) calculateDeadlineUrgency();
+                    setTimeEstimate(t.time || '1h');
+                    document.getElementById('input-difficulty').value = String(Math.max(1, Math.min(5, Number(t.difficulty) || 3)));
+                    updatePriorityRecommendations();
                     document.getElementById('modal-title').innerText = "Edit Matrix Task";
                 }
             } else {
@@ -1140,13 +1133,14 @@
                 document.getElementById('input-type').value = 'Homework';
                 document.getElementById('input-subject').value = 'Maths';
                 document.getElementById('input-notes').value = '';
-                selectTimeBadge('1h');
+                setTimeEstimate('1h');
                 document.getElementById('input-due-days').value = '';
                 document.getElementById('input-repeat-enabled').checked = false;
                 document.getElementById('input-repeat-weeks').value = 1;
                 document.getElementById('input-repeat-start').value = dateKey(startOfToday());
                 toggleRecurringFields();
-                document.getElementById('deadline-rec-text').innerText = "Enter the number of days until the deadline to calculate recommended Urgency (X axis).";
+                document.getElementById('input-difficulty').value = '3';
+                updatePriorityRecommendations();
                 document.getElementById('apply-urgency-btn').classList.add('hidden');
                 STATE.recommendedX = null;
             }
@@ -1266,7 +1260,8 @@
             const color = document.getElementById('input-color').value;
             const x = parseInt(document.getElementById('input-urgency').value);
             const y = parseInt(document.getElementById('input-importance').value);
-            const time = document.getElementById('input-time').value;
+            const time = getTimeEstimateLabel();
+            const difficulty = Math.max(1, Math.min(5, Number.parseInt(document.getElementById('input-difficulty').value, 10) || 3));
             const repeatEnabled = !!document.getElementById('input-repeat-enabled').checked;
             const repeatWeeks = Math.max(1, Math.min(52, Number.parseInt(document.getElementById('input-repeat-weeks').value, 10) || 1));
             const repeatStart = document.getElementById('input-repeat-start').value;
@@ -1278,7 +1273,7 @@
             pushUndo(existingIndex > -1 ? 'Edit task' : 'Create task');
             const previous = existingIndex > -1 ? STATE.tasks[existingIndex] : null;
             const recurrence = repeatEnabled ? { enabled:true, intervalWeeks:repeatWeeks, seriesId:previous?.recurrence?.seriesId || id, startDate:previous?.recurrence?.startDate || repeatStart, occurrenceNumber:Math.max(1, Number(previous?.recurrence?.occurrenceNumber) || 1) } : null;
-            const taskData = { ...(previous || {}), id, title, type, subject, notes, color, x, y, time, deadline, recurrence, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+            const taskData = { ...(previous || {}), id, title, type, subject, notes, color, x, y, time, difficulty, deadline, recurrence, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
 
             if (existingIndex > -1) STATE.tasks[existingIndex] = taskData;
             else STATE.tasks.push(taskData);
