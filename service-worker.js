@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v900-mass-ui-overhaul';
+const CACHE_NAME = 'studyquest-v900-dashboard-workspace';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
