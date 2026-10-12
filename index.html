@@ -2156,6 +2156,7 @@
             if (!['theme-slate','theme-oled','theme-cyberpunk','theme-pastel','theme-neon'].includes(themeName)) themeName='theme-slate';
             document.body.className = `${themeName} min-h-screen flex flex-col antialiased`;
             if (typeof window.sqApplyAppearance === "function") window.sqApplyAppearance();
+            if (typeof window.sqApplyAppearance === 'function') window.sqApplyAppearance();
             STATE.theme = themeName; saveLocalStorage();
         }
         function toggleSound(enabled) { STATE.soundEnabled = !!enabled; saveLocalStorage(); }
@@ -2174,6 +2175,7 @@
             if(raw){try{const parsed=JSON.parse(raw);const normalized=normalizeState(parsed);Object.keys(STATE).forEach(k=>delete STATE[k]);Object.assign(STATE,normalized);if(!parsed.schemaVersion||parsed.schemaVersion<7){saveLocalStorage();const status=document.getElementById('backup-status');if(status)status.textContent='Your previous StudyQuest data was upgraded to v7. Export a backup to keep a separate copy.';}}catch(e){console.error('StudyQuest data could not be loaded',e);}}
             else { STATE.availability=defaultAvailability(); }
             document.body.className=`${STATE.theme||'theme-slate'} min-h-screen flex flex-col antialiased`;
+            if (typeof window.sqApplyAppearance === 'function') window.sqApplyAppearance();
             const sound=document.getElementById('sound-toggle-checkbox');if(sound)sound.checked=STATE.soundEnabled!==false;
         }
         function renderAll() {
@@ -2203,7 +2205,7 @@
     if(!data||!Array.isArray(data.tasks)||!Array.isArray(data.revisionTopics))throw new Error('The cloud record does not look like valid StudyQuest data.');
     const normalized=typeof normalizeState==='function'?normalizeState(data):data;
     Object.keys(STATE).forEach(k=>delete STATE[k]);Object.assign(STATE,normalized);STATE.schemaVersion=7;
-    try{document.body.className=`${STATE.theme||'theme-slate'} min-h-screen flex flex-col antialiased`;}catch(e){}
+    try{document.body.className=`${STATE.theme||'theme-slate'} min-h-screen flex flex-col antialiased`;if(typeof window.sqApplyAppearance==='function')window.sqApplyAppearance();}catch(e){}
     const sound=$('sound-toggle-checkbox');if(sound)sound.checked=STATE.soundEnabled!==false;
     const raw=JSON.stringify(STATE);localStorage.setItem('studyquest_v7_data',raw);localStorage.setItem('studyquest_v6_data',raw);localStorage.setItem('studyquest_v5_data',raw);localStorage.setItem('eisenhower_v4_data',raw);
     if(typeof renderAll==='function')renderAll();
