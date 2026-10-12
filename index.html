@@ -1715,7 +1715,7 @@
                 nextDate = addWeeksToDateKey(task.deadline || task.recurrence.startDate, intervalWeeks);
                 const today = dateKey(startOfToday());
                 let guard = 0;
-                while (nextDate < today && guard++ < 520) nextDate = addWeeksToDateKey(nextDate, intervalWeeks);
+                while (nextDate <= today && guard++ < 520) nextDate = addWeeksToDateKey(nextDate, intervalWeeks);
                 completedOccurrence.nextOccurrenceDate = nextDate;
             }
             STATE.completedTasks.push(completedOccurrence);
