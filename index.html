@@ -1321,12 +1321,16 @@
             const subjectFilter = document.getElementById('task-filter-subject')?.value || 'all';
             const typeFilter = document.getElementById('task-filter-type')?.value || 'all';
             const statusFilter = document.getElementById('task-filter-status')?.value || 'active';
+            const repeatFilter = document.getElementById('task-filter-repeat')?.value || 'all';
+            const sortMode = document.getElementById('task-sort')?.value || 'due';
             const active = getAllWorkItems().filter(w => {
                 if (w.workKind === 'milestone') return false;
                 if (statusFilter === 'active' && w.completed) return false;
                 if (statusFilter === 'completed' && !w.completed) return false;
                 if (subjectFilter !== 'all' && w.subject !== subjectFilter) return false;
                 if (typeFilter !== 'all' && w.type !== typeFilter) return false;
+                if (repeatFilter === 'recurring' && !w.recurrence?.enabled) return false;
+                if (repeatFilter === 'once' && w.recurrence?.enabled) return false;
                 return !query || `${w.title} ${w.notes || ''} ${w.subject || ''} ${w.type || ''}`.toLowerCase().includes(query);
             });
             if (statusFilter !== 'active') {
@@ -1334,12 +1338,22 @@
                     if (statusFilter === 'active') return;
                     if (subjectFilter !== 'all' && (t.subject || 'Other') !== subjectFilter) return;
                     if (typeFilter !== 'all' && (t.type || 'Homework') !== typeFilter) return;
+                    if (repeatFilter === 'recurring' && !t.recurrence?.enabled) return;
+                    if (repeatFilter === 'once' && t.recurrence?.enabled) return;
                     if (query && !`${t.title} ${t.notes || ''} ${t.subject || ''} ${t.type || ''}`.toLowerCase().includes(query)) return;
                     active.push({ ...t, workId: 'completed:' + t.id + ':' + t.completedAt, workKind: 'completed', completed: true });
                 });
             }
+            const todayKey = dateKey(startOfToday());
+            const setOverview = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+            setOverview('tasks-overview-active', (STATE.tasks || []).length);
+            setOverview('tasks-overview-due', (STATE.tasks || []).filter(t => t.deadline && t.deadline <= todayKey).length);
+            setOverview('tasks-overview-recurring', (STATE.tasks || []).filter(t => t.recurrence?.enabled).length);
+            setOverview('tasks-overview-completed', (STATE.completedTasks || []).length);
             active.sort((a,b) => {
                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                if (sortMode === 'title') return String(a.title).localeCompare(String(b.title));
+                if (sortMode === 'priority') return ((Number(b.x)||0)*(Number(b.y)||0))-((Number(a.x)||0)*(Number(a.y)||0));
                 const da = daysUntilDeadline(a.deadline), db = daysUntilDeadline(b.deadline);
                 if (da === null && db === null) return String(a.title).localeCompare(String(b.title));
                 if (da === null) return 1; if (db === null) return -1; return da - db;
@@ -1354,9 +1368,31 @@
                 if (item.workKind === 'task') actions = `<button type="button" onclick="openTaskModal('${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold hover:border-indigo-500"><i class="fa-solid fa-pen mr-1"></i>Edit</button><button type="button" onclick="completeTask('${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold"><i class="fa-solid fa-check mr-1"></i>Done</button><button type="button" onclick="deleteTask('${escapeAttr(item.id)}')" aria-label="Delete task" class="px-3 py-2 rounded-xl border themed-card text-xs opacity-70 hover:opacity-100"><i class="fa-solid fa-trash"></i></button>`;
                 else if (item.workKind === 'milestone') actions = `<button type="button" onclick="toggleMilestone('${escapeAttr(item.projectId)}','${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl ${item.completed?'themed-card border':'bg-emerald-600 text-white'} text-xs font-extrabold">${item.completed?'Reopen':'Complete'}</button><button type="button" onclick="switchTab('projects')" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold">Project</button>`;
                 else actions = `<button type="button" onclick="restoreCompletedTask('${escapeAttr(item.id)}','${escapeAttr(item.completedAt || '')}')" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold"><i class="fa-solid fa-rotate-left mr-1"></i>Restore</button>`;
-                card.innerHTML = `<span class="w-3 h-3 rounded-full shrink-0 border border-white/20" style="background-color:${item.color || '#6366f1'}"></span><div class="min-w-0 flex-1"><div class="font-extrabold text-sm break-words ${item.completed?'line-through opacity-60':''}">${escapeHtml(item.title)}</div><div class="flex flex-wrap items-center gap-1.5 mt-2 text-[10px]"><span class="bg-indigo-500/15 text-indigo-300 px-2 py-1 rounded-lg font-bold">${escapeHtml(item.subject || 'Other')}</span><span class="bg-slate-700/70 px-2 py-1 rounded-lg font-semibold">${escapeHtml(item.type || 'Homework')}</span><span class="themed-card border px-2 py-1 rounded-lg">${escapeHtml(item.time || '1h')}</span><span class="font-extrabold ${due.color} flex items-center gap-1"><span class="w-2 h-2 rounded-full ${due.dot}"></span>${escapeHtml(dueText)}</span>${item.workKind==='milestone'?'<span class="text-violet-300 font-bold">Project milestone</span>':''}${item.earnedXP?`<span class="text-amber-400 font-extrabold">+${Number(item.earnedXP)} XP</span>`:''}</div>${item.notes?`<p class="text-xs opacity-65 mt-2 whitespace-pre-wrap break-words">${escapeHtml(item.notes)}</p>`:''}${item.completedAt?`<p class="text-[10px] opacity-50 mt-1">Completed ${new Date(item.completedAt).toLocaleDateString()}</p>`:''}</div><div class="flex flex-wrap items-center gap-2 shrink-0">${actions}</div>`;
+                card.innerHTML = `<span class="w-3 h-3 rounded-full shrink-0 border border-white/20" style="background-color:${item.color || '#6366f1'}"></span><div class="min-w-0 flex-1"><div class="font-extrabold text-sm break-words ${item.completed?'line-through opacity-60':''}">${escapeHtml(item.title)}</div><div class="flex flex-wrap items-center gap-1.5 mt-2 text-[10px]"><span class="bg-indigo-500/15 text-indigo-300 px-2 py-1 rounded-lg font-bold">${escapeHtml(item.subject || 'Other')}</span><span class="bg-slate-700/70 px-2 py-1 rounded-lg font-semibold">${escapeHtml(item.type || 'Homework')}</span><span class="themed-card border px-2 py-1 rounded-lg">${escapeHtml(item.time || '1h')}</span><span class="font-extrabold ${due.color} flex items-center gap-1"><span class="w-2 h-2 rounded-full ${due.dot}"></span>${escapeHtml(dueText)}</span>${item.workKind==='milestone'?'<span class="text-violet-300 font-bold">Project milestone</span>':''}${item.recurrence?.enabled?`<span class="bg-violet-500/15 text-violet-300 px-2 py-1 rounded-lg font-bold"><i class="fa-solid fa-repeat mr-1"></i>Every ${Number(item.recurrence.intervalWeeks)||1} week${Number(item.recurrence.intervalWeeks)===1?'':'s'}</span>`:'' }${item.earnedXP?`<span class="text-amber-400 font-extrabold">+${Number(item.earnedXP)} XP</span>`:''}</div>${item.notes?`<p class="text-xs opacity-65 mt-2 whitespace-pre-wrap break-words">${escapeHtml(item.notes)}</p>`:''}${item.completedAt?`<p class="text-[10px] opacity-50 mt-1">Completed ${new Date(item.completedAt).toLocaleDateString()}</p>`:''}</div><div class="flex flex-wrap items-center gap-2 shrink-0">${actions}</div>`;
                 list.appendChild(card);
             });
+            const historyList = document.getElementById('completed-task-list');
+            const historyPanel = document.getElementById('completed-history-panel');
+            const historyItems = (STATE.completedTasks || []).filter(t => {
+                if (subjectFilter !== 'all' && (t.subject || 'Other') !== subjectFilter) return false;
+                if (typeFilter !== 'all' && (t.type || 'Homework') !== typeFilter) return false;
+                if (repeatFilter === 'recurring' && !t.recurrence?.enabled) return false;
+                if (repeatFilter === 'once' && t.recurrence?.enabled) return false;
+                return !query || `${t.title} ${t.notes || '' } ${t.subject || '' } ${t.type || '' }`.toLowerCase().includes(query);
+            }).sort((a,b) => String(b.completedAt || '').localeCompare(String(a.completedAt || '')));
+            if (historyList) {
+                historyList.innerHTML = '';
+                historyItems.forEach(item => {
+                    const row = document.createElement('article');
+                    row.className = 'themed-card border rounded-xl p-3 flex items-start gap-3';
+                    const next = item.recurrence?.enabled ? `<div class="text-[10px] text-violet-300 mt-1">Next occurrence: ${escapeHtml(item.nextOccurrenceDate || 'scheduled from original due date')}</div>` : '';
+                    row.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i><div class="min-w-0 flex-1"><div class="text-xs font-bold line-through opacity-70">${escapeHtml(item.title)}</div><div class="text-[10px] opacity-55 mt-1">Completed ${item.completedAt ? new Date(item.completedAt).toLocaleString() : 'date not recorded'} · ${escapeHtml(item.subject || 'Other')} ${item.earnedXP ? `· +${Number(item.earnedXP)} XP` : ''}</div>${item.recurrence?.enabled ? `<div class="text-[10px] text-violet-300 mt-1"><i class="fa-solid fa-repeat mr-1"></i>Every ${Number(item.recurrence.intervalWeeks)||1} week${Number(item.recurrence.intervalWeeks)===1?'':'s'}</div>` : '' }${next}</div>`;
+                    historyList.appendChild(row);
+                });
+            }
+            const historyCount = document.getElementById('completed-history-count');
+            if (historyCount) historyCount.textContent = String(historyItems.length);
+            if (historyPanel) historyPanel.classList.toggle('hidden', statusFilter !== 'active' || historyItems.length === 0);
         }
 
         function addRevisionTopic(event) {
