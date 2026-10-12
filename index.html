@@ -1270,7 +1270,7 @@
             const repeatEnabled = !!document.getElementById('input-repeat-enabled').checked;
             const repeatWeeks = Math.max(1, Math.min(52, Number.parseInt(document.getElementById('input-repeat-weeks').value, 10) || 1));
             const repeatStart = document.getElementById('input-repeat-start').value;
-            if (repeatEnabled && (!/^\\d{4}-\\d{2}-\\d{2}$/.test(repeatStart) || Number.isNaN(new Date(repeatStart + 'T12:00:00').getTime()))) { alert('Choose a valid first due date for this recurring task.'); return; }
+            if (repeatEnabled && (!/^\d{4}-\d{2}-\d{2}$/.test(repeatStart) || Number.isNaN(new Date(repeatStart + 'T12:00:00').getTime()))) { alert('Choose a valid first due date for this recurring task.'); return; }
             const deadline = repeatEnabled ? repeatStart : deadlineFromDays(document.getElementById('input-due-days').value);
 
             const existingIndex = STATE.tasks.findIndex(t => t.id === id);
