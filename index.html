@@ -1691,36 +1691,49 @@
             }
         }
 
+        function addWeeksToDateKey(key, weeks) {
+            if (!key || !/^\\d{4}-\\d{2}-\\d{2}$/.test(key)) return dateKey(startOfToday());
+            const parts = key.split('-').map(Number);
+            const date = new Date(parts[0], parts[1]-1, parts[2], 12);
+            date.setDate(date.getDate() + Math.max(1, Number(weeks)||1) * 7);
+            return dateKey(date);
+        }
+
         function completeTask(id) {
             const task = STATE.tasks.find(t => t.id === id);
             if (!task) return;
-
             pushUndo('Complete task');
             const gainedXP = calculateTaskXP(task);
             STATE.xp += gainedXP;
             STATE.completedTasks = STATE.completedTasks || [];
             const completedAt = new Date().toISOString();
-            STATE.completedTasks.push({ ...task, completedAt, earnedXP: gainedXP });
-            recordActivity({ type: 'task_completed', timestamp: completedAt, subject: task.subject || 'Other', taskId: task.id, title: task.title, xpEarned: gainedXP });
-
+            const completedOccurrence = { ...task, completedAt, earnedXP: gainedXP };
+            let nextDate = null;
+            if (task.recurrence?.enabled) {
+                const intervalWeeks = Math.max(1, Math.min(52, Number(task.recurrence.intervalWeeks)||1));
+                nextDate = addWeeksToDateKey(task.deadline || task.recurrence.startDate, intervalWeeks);
+                const today = dateKey(startOfToday());
+                let guard = 0;
+                while (nextDate < today && guard++ < 520) nextDate = addWeeksToDateKey(nextDate, intervalWeeks);
+                completedOccurrence.nextOccurrenceDate = nextDate;
+            }
+            STATE.completedTasks.push(completedOccurrence);
+            recordActivity({ type:'task_completed', timestamp:completedAt, subject:task.subject || 'Other', taskId:task.id, title:task.title, xpEarned:gainedXP, recurring:!!task.recurrence?.enabled, seriesId:task.recurrence?.seriesId || null });
             STATE.tasks = STATE.tasks.filter(t => t.id !== id);
+            if (task.recurrence?.enabled && nextDate) {
+                const intervalWeeks = Math.max(1, Math.min(52, Number(task.recurrence.intervalWeeks)||1));
+                STATE.tasks.push({ ...task, id:createId('task'), deadline:nextDate, recurrence:{ ...task.recurrence, intervalWeeks, occurrenceNumber:Math.max(1, Number(task.recurrence.occurrenceNumber)||1)+1 }, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() });
+            }
             STATE.scheduleSuggestions = (STATE.scheduleSuggestions || []).filter(s => !(s.sourceType === 'task' && s.sourceId === id));
             STATE.plannedSessions = (STATE.plannedSessions || []).filter(s => !(s.sourceType === 'task' && s.sourceId === id && s.status === 'planned'));
-
-            if (typeof confetti === 'function') {
-                confetti({ particleCount: 70, spread: 70, origin: { y: 0.7 } });
-            }
-
-            if (STATE.soundEnabled) {
-                playChimeSound();
-            }
-
+            if (typeof confetti === 'function') confetti({ particleCount:70, spread:70, origin:{ y:0.7 } });
+            if (STATE.soundEnabled) playChimeSound();
             checkLevelUp();
             saveLocalStorage();
             renderAll(); renderDashboard(); renderStatistics(); renderAllTasks(); updateUndoButton();
         }
 
-        function completeFocusTask() {
+                function completeFocusTask() {
             // Handled dynamically inside updateFocusBanner()
         }
 
