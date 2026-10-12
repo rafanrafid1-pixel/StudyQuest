@@ -1904,7 +1904,7 @@
         }
 
         // ---------- v6 dashboard, projects, assisted scheduling and analytics ----------
-        function durationMinutes(value) { const map = { '15m':15, '30m':30, '45m':45, '1h':60, '2h+':120 }; return map[value] || 60; }
+        function durationMinutes(value) { return timeLabelToMinutes(value || '1h'); }
         function minutesLabel(minutes) { const m = Math.max(0, Math.round(Number(minutes) || 0)); return m >= 60 ? `${Math.floor(m/60)}h${m%60 ? ` ${m%60}m` : ''}` : `${m}m`; }
         function weekStartDate() { const d = startOfToday(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
         function isThisWeek(timestamp) { if (!timestamp) return false; const d = new Date(timestamp); if (Number.isNaN(d.getTime())) return false; const start = weekStartDate(); const end = new Date(start); end.setDate(end.getDate()+7); return d >= start && d < end; }
