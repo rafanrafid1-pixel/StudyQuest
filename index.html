@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V8.3.3 — Clearer Time Estimates</title>
+    <title>StudyQuest V9 — The Mass UI Overhaul</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -280,6 +280,56 @@
             .mobile-bottom-nav { display: none !important; }
         }
 
+
+        /* V9 — refined visual system; intentionally presentation-only. */
+        :root { --sq-accent: #818cf8; --sq-radius: 18px; --sq-ui-scale: 1; --sq-density: 1; }
+        body { letter-spacing: -0.012em; }
+        .themed-card, .themed-card-sub {
+            border-radius: var(--sq-radius);
+            transition: background-color .22s ease, border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+        }
+        .themed-card { box-shadow: 0 10px 34px rgba(0,0,0,.055); }
+        main section, main article { transition: border-color .2s ease, box-shadow .2s ease; }
+        main section.themed-card, #tab-settings > .themed-card {
+            border-color: color-mix(in srgb, var(--border-color) 82%, var(--sq-accent));
+        }
+        button { transition: filter .16s ease, transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+        button:hover { filter: brightness(1.06); }
+        button:active { transform: translateY(1px); }
+        :is(input, select, textarea):focus-visible {
+            outline: 2px solid var(--sq-accent) !important;
+            outline-offset: 2px;
+            border-color: var(--sq-accent) !important;
+        }
+        header { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+        header, .mobile-bottom-nav { box-shadow: 0 8px 28px rgba(0,0,0,.10); }
+        .home-shortcut, .task-node { border-radius: var(--sq-radius); }
+        body.sq-compact { --sq-density: .86; }
+        body.sq-compact main section.rounded-3xl { padding-top: calc(1.5rem * var(--sq-density)); padding-bottom: calc(1.5rem * var(--sq-density)); }
+        body.sq-compact main .gap-3 { gap: .6rem; }
+        body.sq-large-text { font-size: 17px; }
+        body.sq-large-text .text-xs { font-size: .82rem; }
+        body.sq-no-motion *, body.sq-no-motion *::before, body.sq-no-motion *::after {
+            animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+            transition-duration: .001ms !important; scroll-behavior: auto !important;
+        }
+        body.sq-high-contrast { --text-muted: #cbd5e1; }
+        body.sq-high-contrast .opacity-60, body.sq-high-contrast .opacity-65, body.sq-high-contrast .opacity-70 { opacity: .9 !important; }
+        .sq-setting-control { display: grid; gap: .45rem; min-width: 0; }
+        .sq-setting-control label, .sq-setting-label { font-size: 12px; font-weight: 800; }
+        .sq-setting-control input[type="range"] { width: 100%; accent-color: var(--sq-accent); }
+        .sq-setting-control select, .sq-setting-control input[type="color"] {
+            width: 100%; min-height: 42px; border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 8px 10px; background: var(--bg-card-sub); color: var(--text-main);
+        }
+        .sq-setting-control input[type="color"] { padding: 4px; cursor: pointer; }
+        .sq-setting-toggle { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.85rem 0; border-top:1px solid var(--border-color); }
+        .sq-setting-toggle input { accent-color: var(--sq-accent); width:18px; height:18px; }
+        @media (max-width: 640px) {
+            .themed-card, .themed-card-sub { border-radius: min(var(--sq-radius), 18px); }
+            #tab-settings > .themed-card { padding: 1rem; }
+        }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -294,7 +344,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
-                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v8.3.3</span>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v9.0</span>
                     </div>
                     <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
                 </div>
@@ -807,6 +857,57 @@
                     </div>
                 </div>
 
+
+                <!-- V9 Appearance Studio: saved separately so visual preferences never touch planner data. -->
+                <section class="space-y-4 rounded-2xl border p-4 sm:p-5" aria-labelledby="sq-appearance-title">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <h3 id="sq-appearance-title" class="text-sm font-extrabold uppercase tracking-wider"><i class="fa-solid fa-palette mr-2" style="color:var(--sq-accent)"></i>Appearance Studio</h3>
+                            <p class="text-xs opacity-70 mt-1">Tune the interface to your style. Changes save on this device and never modify tasks or cloud data.</p>
+                        </div>
+                        <button type="button" onclick="sqResetAppearance()" class="px-3 py-2 rounded-xl themed-card-sub border text-xs font-bold">Reset appearance</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="sq-setting-control">
+                            <label for="sq-accent-color">Accent colour</label>
+                            <input id="sq-accent-color" type="color" value="#818cf8" oninput="sqApplyAppearance()">
+                        </div>
+                        <div class="sq-setting-control">
+                            <label for="sq-corner-style">Card corners</label>
+                            <select id="sq-corner-style" onchange="sqApplyAppearance()">
+                                <option value="12">Crisp — 12px</option><option value="18" selected>Balanced — 18px</option><option value="26">Extra rounded — 26px</option>
+                            </select>
+                        </div>
+                        <div class="sq-setting-control">
+                            <label for="sq-density-style">Layout density</label>
+                            <select id="sq-density-style" onchange="sqApplyAppearance()">
+                                <option value="comfortable" selected>Comfortable</option><option value="compact">Compact</option>
+                            </select>
+                        </div>
+                        <div class="sq-setting-control">
+                            <label for="sq-text-size">Text size <span id="sq-text-size-value" class="opacity-60 font-normal">100%</span></label>
+                            <input id="sq-text-size" type="range" min="90" max="115" step="5" value="100" oninput="sqApplyAppearance()">
+                        </div>
+                        <div class="sq-setting-control">
+                            <label for="sq-motion-style">Motion</label>
+                            <select id="sq-motion-style" onchange="sqApplyAppearance()">
+                                <option value="full" selected>Standard animations</option><option value="reduced">Reduced motion</option>
+                            </select>
+                        </div>
+                        <div class="sq-setting-control">
+                            <label for="sq-contrast-style">Contrast</label>
+                            <select id="sq-contrast-style" onchange="sqApplyAppearance()">
+                                <option value="standard" selected>Standard</option><option value="high">Higher contrast</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="themed-card-sub border rounded-xl p-3 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" style="background:var(--sq-accent)"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div class="min-w-0 flex-1"><div class="text-xs font-extrabold">Live style preview</div><p class="text-[11px] opacity-70">Your chosen accent, spacing and readability settings apply immediately.</p></div>
+                        <span class="text-[10px] font-extrabold px-3 py-2 rounded-lg text-white" style="background:var(--sq-accent)">Preview</span>
+                    </div>
+                </section>
+
                 <!-- Audio Toggle Section -->
                 <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
                     <div>
@@ -884,6 +985,7 @@
                         <h3 class="text-base font-black text-indigo-300">V8 — Quality of Life Update</h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Project milestones stay in Projects; Matrix axes and quadrants are clearer.</li><li>Cloud &amp; Account controls and Update Log are organised inside Settings.</li><li>Direct navigation between Matrix and All Tasks.</li></ul>
                         <div class="ml-2 sm:ml-4 space-y-2">
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9 — The Mass UI Overhaul</div><p class="text-xs opacity-65">Refined the visual system with cleaner surfaces, smoother interactions and a responsive Appearance Studio for accent colour, card corners, layout density, text size, motion and contrast. Appearance preferences are stored separately from planner data.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V8.3.3 — Clearer Time Estimates</div><p class="text-xs opacity-65">Renamed “Estimated effort” to “Estimated time” and clarified related estimate wording to make it easier to understand.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V8.3.2 — Task Modal Scrolling Fix</div><p class="text-xs opacity-65">The task creation and editing form now scrolls on short screens, keeping every field and the confirmation button reachable on desktop and mobile.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V8.3.1 — Flexible Estimates &amp; Smarter Priorities</div><p class="text-xs opacity-65">Enter any estimated duration with minutes, hours, days, weeks or months. Workload-aware deadline urgency and suggested importance consider task type, difficulty and estimated time, while manual Matrix controls remain available.</p></div>
@@ -2225,6 +2327,54 @@
       console.warn('StudyQuest update support could not be enabled:', err);
     }
   });
+})();
+</script>
+
+
+<script>
+(() => {
+  'use strict';
+  const KEY='studyquest_v9_appearance';
+  const defaults={accent:'#818cf8',radius:'18',density:'comfortable',textSize:'100',motion:'full',contrast:'standard'};
+  const validColor=/^#[0-9a-f]{6}$/i;
+  function readPrefs(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(KEY)||'{}');
+      return {...defaults,...raw,
+        accent:validColor.test(raw.accent||'')?raw.accent:defaults.accent,
+        radius:['12','18','26'].includes(String(raw.radius))?String(raw.radius):defaults.radius,
+        density:['comfortable','compact'].includes(raw.density)?raw.density:defaults.density,
+        textSize:['90','95','100','105','110','115'].includes(String(raw.textSize))?String(raw.textSize):defaults.textSize,
+        motion:['full','reduced'].includes(raw.motion)?raw.motion:defaults.motion,
+        contrast:['standard','high'].includes(raw.contrast)?raw.contrast:defaults.contrast};
+    }catch(_){return {...defaults};}
+  }
+  function setControls(p){
+    const map={'sq-accent-color':'accent','sq-corner-style':'radius','sq-density-style':'density','sq-text-size':'textSize','sq-motion-style':'motion','sq-contrast-style':'contrast'};
+    Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=p[key];});
+  }
+  window.sqApplyAppearance=function(){
+    const p={
+      accent:document.getElementById('sq-accent-color')?.value||defaults.accent,
+      radius:document.getElementById('sq-corner-style')?.value||defaults.radius,
+      density:document.getElementById('sq-density-style')?.value||defaults.density,
+      textSize:document.getElementById('sq-text-size')?.value||defaults.textSize,
+      motion:document.getElementById('sq-motion-style')?.value||defaults.motion,
+      contrast:document.getElementById('sq-contrast-style')?.value||defaults.contrast};
+    if(!validColor.test(p.accent))p.accent=defaults.accent;
+    document.documentElement.style.setProperty('--sq-accent',p.accent);
+    document.documentElement.style.setProperty('--sq-radius',p.radius+'px');
+    document.body.style.fontSize=Number(p.textSize)===100?'':(Number(p.textSize)/100*16)+'px';
+    document.body.classList.toggle('sq-compact',p.density==='compact');
+    document.body.classList.toggle('sq-large-text',Number(p.textSize)>=110);
+    document.body.classList.toggle('sq-no-motion',p.motion==='reduced');
+    document.body.classList.toggle('sq-high-contrast',p.contrast==='high');
+    const value=document.getElementById('sq-text-size-value');if(value)value.textContent=p.textSize+'%';
+    try{localStorage.setItem(KEY,JSON.stringify(p));}catch(_){}
+  };
+  window.sqResetAppearance=function(){setControls(defaults);window.sqApplyAppearance();};
+  function init(){setControls(readPrefs());window.sqApplyAppearance();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 
