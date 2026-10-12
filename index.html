@@ -352,7 +352,8 @@
           body > header { margin-left:-236px; padding-left:236px; }
           body > header > div { max-width:none; padding-left:28px; padding-right:28px; }
           body > main { max-width:none; width:100%; padding:25px 30px 38px; }
-          #tab-dashboard { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(270px,.9fr); grid-template-areas:"intro intro" "metrics metrics" "priorities revision" "upcoming progress" "workspace workspace" "learning learning" "footer footer"; gap:18px; align-items:stretch; }
+          #tab-dashboard:not(.hidden) { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(270px,.9fr); grid-template-areas:"intro intro" "metrics metrics" "priorities revision" "upcoming progress" "workspace workspace" "learning learning" "footer footer"; gap:18px; align-items:stretch; }
+          #tab-dashboard.hidden { display:none !important; }
           #tab-dashboard > section:nth-child(1) { grid-area:intro; padding:5px 2px 2px; }
           #tab-dashboard > section:nth-child(1) h2 { font-size:28px; letter-spacing:-.055em; }
           #tab-dashboard > section:nth-child(2) { grid-area:metrics; gap:14px; }
@@ -372,12 +373,14 @@
           #tab-dashboard .home-shortcut { min-height:82px; }
         }
         @media (min-width:768px) and (max-width:1023px) {
-          #tab-dashboard { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; }
+          #tab-dashboard:not(.hidden) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; }
+          #tab-dashboard.hidden { display:none !important; }
           #tab-dashboard > section:first-child, #tab-dashboard > section:nth-child(2), #tab-dashboard > section:nth-child(5), #tab-dashboard > section:nth-child(6), #tab-dashboard > section:nth-child(7) { grid-column:1 / -1; }
         }
         @media (max-width:1023px) { #sq-desktop-sidebar { display:none !important; } }
         @media (max-width:767px) {
-          #tab-dashboard { display:flex; flex-direction:column; gap:16px; }
+          #tab-dashboard:not(.hidden) { display:flex; flex-direction:column; gap:16px; }
+          #tab-dashboard.hidden { display:none !important; }
           #tab-dashboard > section:nth-child(2) > div { min-width:0; }
         }
 
