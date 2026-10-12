@@ -1163,7 +1163,7 @@
             if (Number.isFinite(Number(value)) && Number(value) > 0) return Math.round(Number(value));
             const raw = String(value || '1h').trim().toLowerCase();
             if (raw === '2h+') return 120;
-            const m = raw.match(/^(\\d+(?:\\.\\d+)?)\\s*(m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|mo|month|months)$/);
+            const m = raw.match(/^(\d+(?:\.\d+)?)\s*(m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|mo|month|months)$/);
             if (!m) return 60;
             const n = Number(m[1]), u = m[2];
             const factor = ['m','min','mins','minute','minutes'].includes(u) ? 1 : ['h','hr','hrs','hour','hours'].includes(u) ? 60 : ['d','day','days'].includes(u) ? 1440 : ['w','week','weeks'].includes(u) ? 10080 : 43200;
