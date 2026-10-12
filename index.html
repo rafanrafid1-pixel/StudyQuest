@@ -1159,15 +1159,45 @@
             document.getElementById('task-modal').classList.add('hidden');
         }
 
-        function selectTimeBadge(badge) {
-            document.getElementById('input-time').value = badge;
-            document.querySelectorAll('.time-badge-btn').forEach(btn => {
-                if (btn.innerText.trim() === badge) {
-                    btn.className = "time-badge-btn py-1.5 text-xs font-bold rounded-lg border border-indigo-500 bg-indigo-600/20 text-indigo-300";
-                } else {
-                    btn.className = "time-badge-btn py-1.5 text-xs font-bold rounded-lg border themed-card-sub opacity-70 hover:border-indigo-500";
-                }
-            });
+        function timeLabelToMinutes(value) {
+            if (Number.isFinite(Number(value)) && Number(value) > 0) return Math.round(Number(value));
+            const raw = String(value || '1h').trim().toLowerCase();
+            if (raw === '2h+') return 120;
+            const m = raw.match(/^(\\d+(?:\\.\\d+)?)\\s*(m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks|mo|month|months)$/);
+            if (!m) return 60;
+            const n = Number(m[1]), u = m[2];
+            const factor = ['m','min','mins','minute','minutes'].includes(u) ? 1 : ['h','hr','hrs','hour','hours'].includes(u) ? 60 : ['d','day','days'].includes(u) ? 1440 : ['w','week','weeks'].includes(u) ? 10080 : 43200;
+            return Math.max(1, Math.round(n * factor));
+        }
+        function minutesToEstimateLabel(minutes) {
+            const mins = Math.max(1, Math.round(Number(minutes) || 60));
+            if (mins < 60) return mins + 'm';
+            if (mins % 43200 === 0) return (mins/43200) + ' months';
+            if (mins % 10080 === 0) return (mins/10080) + ' weeks';
+            if (mins % 1440 === 0) return (mins/1440) + ' days';
+            if (mins % 60 === 0) return (mins/60) + 'h';
+            return mins + 'm';
+        }
+        function getTimeEstimateLabel() {
+            const amount = Math.max(1, Math.min(100000, Number(document.getElementById('input-time-amount')?.value) || 1));
+            const unit = document.getElementById('input-time-unit')?.value || 'hours';
+            const factor = {minutes:1,hours:60,days:1440,weeks:10080,months:43200}[unit] || 60;
+            return minutesToEstimateLabel(amount * factor);
+        }
+        function setTimeEstimate(value) {
+            const minutes = timeLabelToMinutes(value);
+            let amount = minutes, unit = 'minutes';
+            if (minutes % 43200 === 0) { amount = minutes/43200; unit='months'; }
+            else if (minutes % 10080 === 0) { amount = minutes/10080; unit='weeks'; }
+            else if (minutes % 1440 === 0) { amount = minutes/1440; unit='days'; }
+            else if (minutes % 60 === 0) { amount = minutes/60; unit='hours'; }
+            const amountEl = document.getElementById('input-time-amount');
+            const unitEl = document.getElementById('input-time-unit');
+            const hidden = document.getElementById('input-time');
+            if (amountEl) amountEl.value = String(amount);
+            if (unitEl) unitEl.value = unit;
+            if (hidden) hidden.value = minutesToEstimateLabel(minutes);
+            updatePriorityRecommendations();
         }
 
         function startOfToday() {
@@ -1206,48 +1236,85 @@
             return { days, label: `${days} days left`, color: 'text-slate-400', dot: 'bg-slate-400' };
         }
 
-        function calculateDeadlineUrgency() {
-            const rawDays = document.getElementById('input-due-days').value;
-            const text = document.getElementById('deadline-rec-text');
-            const applyBtn = document.getElementById('apply-urgency-btn');
-            if (rawDays === '') {
-                text.innerText = 'No deadline set. Add a number of days to get a recommended urgency.';
-                applyBtn.classList.add('hidden');
-                STATE.recommendedX = null;
-                return;
-            }
-            const diffDays = Number(rawDays);
-            if (!Number.isInteger(diffDays) || (diffDays < 0 && !document.getElementById('task-id').value)) {
-                text.innerText = 'Enter a whole number of days (0 or more for new tasks).';
-                applyBtn.classList.add('hidden');
-                STATE.recommendedX = null;
-                return;
-            }
-
-            let recX = 50;
-            let explanation = '';
-            if (diffDays === 0) {
-                recX = 95; explanation = 'Due today. Recommended Urgency: 95.';
-            } else if (diffDays === 1) {
-                recX = 85; explanation = 'Due tomorrow. Recommended Urgency: 85.';
-            } else if (diffDays <= 3) {
-                recX = 70; explanation = `Due in ${diffDays} days. Recommended Urgency: 70.`;
-            } else if (diffDays <= 7) {
-                recX = 50; explanation = `Due in ${diffDays} days. Recommended Urgency: 50.`;
-            } else {
-                recX = 25; explanation = `Due in ${diffDays} days. Recommended Urgency: 25.`;
-            }
-            STATE.recommendedX = recX;
-            text.innerText = explanation;
-            applyBtn.classList.remove('hidden');
+        function estimateMinutesForTask() {
+            const amount = Math.max(1, Math.min(100000, Number(document.getElementById('input-time-amount')?.value) || 1));
+            const unit = document.getElementById('input-time-unit')?.value || 'hours';
+            return Math.max(1, amount * ({minutes:1,hours:60,days:1440,weeks:10080,months:43200}[unit] || 60));
         }
-
+        function calculateDeadlineUrgency() {
+            const raw = document.getElementById('input-due-days')?.value ?? '';
+            const text = document.getElementById('deadline-rec-text');
+            const button = document.getElementById('apply-urgency-btn');
+            if (raw === '') {
+                STATE.recommendedX = null;
+                if (text) text.textContent = 'No deadline: set urgency manually, or add a deadline for a recommendation.';
+                if (button) button.classList.add('hidden');
+                return null;
+            }
+            const days = Number(raw);
+            if (!Number.isInteger(days) || days < (document.getElementById('task-id')?.value ? -3650 : 0) || days > 3650) {
+                STATE.recommendedX = null;
+                if (text) text.textContent = 'Enter a whole number of days within the allowed range.';
+                if (button) button.classList.add('hidden');
+                return null;
+            }
+            const effortDays = estimateMinutesForTask() / 1440;
+            let score;
+            if (days < 0) score = 97 + Math.min(2, Math.abs(days) * 0.05);
+            else {
+                const deadlinePressure = 100 / (1 + Math.exp((days - 4) / 2.5));
+                const workloadPressure = 24 * (1 - Math.exp(-effortDays / (days + 1)));
+                score = Math.round(Math.max(5, Math.min(99, deadlinePressure + workloadPressure)));
+            }
+            const rec = Math.round(score);
+            STATE.recommendedX = rec;
+            if (text) text.textContent = `Suggested urgency: ${rec}/100. Uses deadline proximity and estimated workload (${minutesToEstimateLabel(estimateMinutesForTask())}). Treat this as a guide.`;
+            if (button) button.classList.remove('hidden');
+            return rec;
+        }
+        function calculateRecommendedImportance() {
+            const type = document.getElementById('input-type')?.value || 'Other';
+            const difficulty = Math.max(1, Math.min(5, Number(document.getElementById('input-difficulty')?.value) || 3));
+            const minutes = estimateMinutesForTask();
+            const typeBase = {Homework:48,Revision:46,Project:55,Coursework:62,'Test prep':68,Other:35}[type] ?? 40;
+            const difficultyPoints = (difficulty - 3) * 7;
+            const effortPoints = Math.min(18, Math.log2(1 + minutes / 30) * 4.5);
+            return Math.round(Math.max(5, Math.min(95, typeBase + difficultyPoints + effortPoints)));
+        }
+        function updatePriorityRecommendations() {
+            const hidden = document.getElementById('input-time');
+            if (hidden) hidden.value = getTimeEstimateLabel();
+            const x = calculateDeadlineUrgency();
+            const y = calculateRecommendedImportance();
+            STATE.recommendedY = y;
+            const type = document.getElementById('input-type')?.value || 'Other';
+            const subject = document.getElementById('input-subject')?.value || 'Other';
+            const difficulty = Number(document.getElementById('input-difficulty')?.value) || 3;
+            const importanceText = document.getElementById('importance-rec-text');
+            if (importanceText) importanceText.textContent = `Suggested importance: ${y}/100 for ${type} in ${subject} (difficulty ${difficulty}/5, estimated effort ${minutesToEstimateLabel(estimateMinutesForTask())}). Subject is shown as context; difficulty captures how challenging it is for you.`;
+            const importanceButton = document.getElementById('apply-importance-btn');
+            if (importanceButton) importanceButton.classList.remove('hidden');
+            const xv = document.getElementById('input-urgency')?.value;
+            const yv = document.getElementById('input-importance')?.value;
+            const urgencyVal = document.getElementById('urgency-val');
+            const importanceVal = document.getElementById('importance-val');
+            if (urgencyVal && xv !== undefined) urgencyVal.textContent = xv;
+            if (importanceVal && yv !== undefined) importanceVal.textContent = yv;
+        }
         function applyRecommendedUrgency() {
-            if (STATE.recommendedX !== null) {
+            if (STATE.recommendedX !== null && STATE.recommendedX !== undefined) {
                 document.getElementById('input-urgency').value = STATE.recommendedX;
                 document.getElementById('urgency-val').innerText = STATE.recommendedX;
             }
         }
+        function applyRecommendedImportance() {
+            if (STATE.recommendedY !== null && STATE.recommendedY !== undefined) {
+                document.getElementById('input-importance').value = STATE.recommendedY;
+                document.getElementById('importance-val').innerText = STATE.recommendedY;
+            }
+        }
+
+        
 
         // Form Submission Handler
         function handleTaskSubmit(e) {
@@ -1643,10 +1710,8 @@
         function calculateTaskXP(task) {
             let base = Math.round((task.x * task.y) / 100);
             let timeMult = 1.0;
-            if (task.time === '30m') timeMult = 1.1;
-            if (task.time === '45m') timeMult = 1.2;
-            if (task.time === '1h') timeMult = 1.3;
-            if (task.time === '2h+') timeMult = 1.5;
+            const effortHours = timeLabelToMinutes(task.time || '1h') / 60;
+            timeMult = Math.min(1.8, 1 + Math.log2(1 + effortHours) * 0.18);
 
             let xp = Math.round(base * timeMult) + 15;
             if (task.type === 'Revision' || task.type === 'Test prep') xp += 10;
