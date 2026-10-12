@@ -155,6 +155,21 @@
             animation: aura-pulse 2s infinite;
         }
 
+        /* Task modal: keep the full form reachable on short screens. The form itself scrolls,
+           while the overlay stays anchored to the viewport so its top cannot disappear. */
+        #task-modal {
+            align-items: flex-start;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        #task-modal > .themed-card {
+            max-height: calc(100vh - 2rem);
+            max-height: calc(100dvh - 2rem);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
+
         /* Scrollbar styling */
         ::-webkit-scrollbar {
             width: 6px;
