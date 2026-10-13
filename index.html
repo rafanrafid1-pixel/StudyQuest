@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V9.5 — The Complete Refresh</title>
+    <title>StudyQuest V9.6 — Dashboard Reimagined</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -459,6 +459,68 @@
         @media (prefers-reduced-motion:reduce) {
           *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
         }
+ 
+        /* V9.6 — dashboard information architecture redesign */
+        @media (min-width:1024px) {
+          #tab-dashboard:not(.hidden) {
+            display:grid;
+            grid-template-columns:repeat(12,minmax(0,1fr));
+            grid-template-areas:
+              "hero hero hero hero hero hero hero hero hero hero hero hero"
+              "stats stats stats stats stats stats stats stats stats stats stats stats"
+              "focus focus focus focus focus focus focus focus upcoming upcoming upcoming upcoming"
+              "tools tools tools tools tools learning learning learning learning learning learning learning"
+              "overview overview overview overview overview overview overview overview overview overview overview overview"
+              "matrix matrix matrix matrix matrix matrix matrix matrix matrix matrix matrix matrix"
+              "weekly weekly weekly weekly weekly weekly weekly weekly weekly weekly weekly weekly"
+              "help help help help help help help help help help help help";
+            gap:20px; align-items:stretch;
+          }
+          #tab-dashboard > section:nth-child(1) { grid-area:hero; padding:14px 2px 8px; }
+          #tab-dashboard > section:nth-child(2) { grid-area:stats; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+          #tab-dashboard > section:nth-child(3) { grid-area:focus; grid-template-columns:repeat(3,minmax(0,1fr)); align-content:start; }
+          #tab-dashboard > section:nth-child(4) { grid-area:upcoming; align-content:start; }
+          #tab-dashboard > section:nth-child(5) { grid-area:tools; padding-top:0; }
+          #tab-dashboard > section:nth-child(6) { grid-area:learning; height:100%; }
+          #tab-dashboard > section:nth-child(7) { grid-area:help; }
+          #tab-dashboard > section:nth-child(8) { grid-area:overview; }
+          #tab-dashboard > section:nth-child(9) { grid-area:matrix; }
+          #tab-dashboard > section:nth-child(10) { grid-area:weekly; }
+          #tab-dashboard > section:nth-child(3) > *, #tab-dashboard > section:nth-child(4) > * { min-width:0; }
+          #tab-dashboard > section:nth-child(3) .themed-card, #tab-dashboard > section:nth-child(4) .themed-card { height:100%; }
+          #tab-dashboard > section:nth-child(5) > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+          #tab-dashboard > section:nth-child(5) > div > * { min-width:0; }
+          #tab-dashboard > section:nth-child(9) { overflow:hidden; }
+          #tab-dashboard > section:nth-child(9) > div:first-child { margin-bottom:20px; }
+          #tab-dashboard > section:nth-child(9) > section { gap:14px; }
+        }
+        @media (min-width:640px) and (max-width:1023px) {
+          #tab-dashboard:not(.hidden) { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:16px; }
+          #tab-dashboard > section:nth-child(1), #tab-dashboard > section:nth-child(2), #tab-dashboard > section:nth-child(8), #tab-dashboard > section:nth-child(9), #tab-dashboard > section:nth-child(10), #tab-dashboard > section:nth-child(7) { grid-column:1/-1; }
+          #tab-dashboard > section:nth-child(3) { grid-column:span 3; display:flex; flex-direction:column; }
+          #tab-dashboard > section:nth-child(4) { grid-column:span 3; display:flex; flex-direction:column; }
+          #tab-dashboard > section:nth-child(5) { grid-column:span 3; }
+          #tab-dashboard > section:nth-child(6) { grid-column:span 3; }
+        }
+        @media (max-width:639px) {
+          #tab-dashboard:not(.hidden) { display:flex; flex-direction:column; gap:16px; }
+          #tab-dashboard > section:nth-child(2) { gap:10px; }
+          #tab-dashboard > section:nth-child(3), #tab-dashboard > section:nth-child(4) { gap:12px; }
+        }
+        #tab-dashboard > section:nth-child(1) { border-radius:24px; }
+        #tab-dashboard > section:nth-child(1) h2 { font-size:clamp(1.8rem,3vw,2.8rem); font-weight:850; letter-spacing:-.065em; }
+        #tab-dashboard > section:nth-child(1) > div:first-child:before { content:"YOUR WORKSPACE / TODAY"; display:block; font-size:9px; letter-spacing:.19em; font-weight:900; color:var(--sq-accent,#818cf8); margin-bottom:12px; }
+        #tab-dashboard > section:nth-child(2) > div { min-height:126px; display:flex; flex-direction:column; justify-content:center; padding:20px; border-radius:20px; background:linear-gradient(145deg,color-mix(in srgb,var(--bg-card) 96%,var(--sq-accent,#818cf8)),var(--bg-card-sub)); position:relative; }
+        #tab-dashboard > section:nth-child(2) > div:before { content:""; position:absolute; left:0; top:20px; bottom:20px; width:3px; border-radius:0 5px 5px 0; background:var(--sq-accent,#818cf8); opacity:.8; }
+        #tab-dashboard > section:nth-child(2) > div:nth-child(2):before { background:#f59e0b; }
+        #tab-dashboard > section:nth-child(2) > div:nth-child(3):before { background:#f87171; }
+        #tab-dashboard > section:nth-child(2) > div:nth-child(4):before { background:#34d399; }
+        #tab-dashboard > section:nth-child(3) > div, #tab-dashboard > section:nth-child(4) > div { border-radius:20px; }
+        #tab-dashboard > section:nth-child(5) > h3, #tab-dashboard > section:nth-child(6) h3 { letter-spacing:-.035em; }
+        #tab-dashboard > section:nth-child(9) { border-radius:24px; padding:clamp(16px,2vw,28px); background:linear-gradient(145deg,color-mix(in srgb,var(--bg-card) 97%,var(--sq-accent,#818cf8)),var(--bg-card-sub)); }
+        #tab-dashboard > section:nth-child(9) > section { margin-top:16px; }
+        #tab-dashboard > section:nth-child(10) { border-radius:24px; }
+        @media (prefers-reduced-motion:reduce) { #tab-dashboard:not(.hidden) { animation:none; } }
 </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -473,7 +535,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
-                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v9.5</span>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v9.6</span>
                     </div>
                     <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
                 </div>
@@ -1129,6 +1191,7 @@
                         <h3 class="text-base font-black text-indigo-300">V9 — The Mass UI Overhaul</h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Introduced the Appearance Studio with accent colour, card corners, layout density, text size, motion and contrast controls.</li><li>Refined surfaces and interactions while keeping appearance preferences separate from planner data.</li></ul>
                         <div class="ml-2 sm:ml-4 space-y-2">
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.6 — Dashboard Reimagined</div><p class="text-xs opacity-65">Rebuilt the dashboard's layout hierarchy into a workspace: distinct focus and upcoming-work columns, compact KPI tiles, grouped shortcuts, and a wider dedicated task matrix. Responsive layouts adapt the arrangement to desktop, tablet and mobile instead of only restyling the same structure.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.5 — The Complete Refresh</div><p class="text-xs opacity-65">A full visual system refresh with improved spacing, refined surfaces, stronger typography, more consistent cards and controls, responsive navigation, accessible focus states, subtle motion and reduced-motion support. Existing planner workflows and data storage are retained.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.1.1 — Sidebar Active-State Fix</div><p class="text-xs opacity-65">Fixed sidebar highlighting so the selected navigation item follows the page you open instead of leaving Overview highlighted.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.1 — Dashboard Tab Visibility Fix</div><p class="text-xs opacity-65">Fixed a CSS layout conflict that could leave the Overview dashboard visible beneath other sections. The dashboard grid now applies only when Overview is active.</p></div>
