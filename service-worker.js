@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v911-sidebar-active-fix';
+const CACHE_NAME = 'studyquest-v950-complete-refresh';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
