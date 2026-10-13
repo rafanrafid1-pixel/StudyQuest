@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V9 — The Mass UI Overhaul</title>
+    <title>StudyQuest V9.7 — Midnight Atlas</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -390,7 +390,30 @@
         }
 
     
-        </style>
+        
+        /* V9.7 — Midnight Atlas visual polish. Intentionally styling-only: no layout/display/grid rules. */
+        :root { --sq-ui-line: color-mix(in srgb, var(--border-color) 72%, transparent); }
+        body { background-image: radial-gradient(ellipse at 15% 0%, color-mix(in srgb, var(--sq-accent) 10%, transparent), transparent 36%), radial-gradient(ellipse at 88% 10%, rgba(56,189,248,.055), transparent 30%); }
+        #sq-desktop-sidebar { border-right-color: var(--sq-ui-line) !important; background: color-mix(in srgb,var(--bg-card) 94%,#071526) !important; }
+        .sq-side-brand { padding-bottom:26px !important; }
+        .sq-brand-mark { border-radius:12px !important; box-shadow:0 0 0 5px color-mix(in srgb,var(--sq-accent) 8%,transparent), 0 8px 22px color-mix(in srgb,var(--sq-accent) 24%,transparent) !important; }
+        #sq-desktop-sidebar > button, .sq-side-bottom > button { border:1px solid transparent !important; border-radius:11px !important; transition:background .16s ease,border-color .16s ease,color .16s ease !important; }
+        #sq-desktop-sidebar > button:hover, .sq-side-bottom > button:hover { background:color-mix(in srgb,var(--bg-card-sub) 80%,var(--sq-accent)) !important; border-color:var(--sq-ui-line) !important; }
+        #sq-desktop-sidebar > button.sq-side-active { background:linear-gradient(110deg,color-mix(in srgb,var(--sq-accent) 18%,var(--bg-card)),color-mix(in srgb,var(--sq-accent) 7%,var(--bg-card))) !important; border-color:color-mix(in srgb,var(--sq-accent) 27%,transparent) !important; box-shadow:inset 3px 0 0 var(--sq-accent) !important; }
+        .themed-card { border-color:var(--sq-ui-line) !important; box-shadow:0 8px 24px rgba(0,0,0,.07); }
+        .themed-card-sub { border-color:var(--sq-ui-line) !important; }
+        .themed-card.border, .themed-card-sub.border { transition:border-color .18s ease,box-shadow .18s ease; }
+        .themed-card.border:hover { border-color:color-mix(in srgb,var(--sq-accent) 28%,var(--border-color)) !important; }
+        main h1, main h2, main h3 { letter-spacing:-.035em; }
+        main h1 { letter-spacing:-.05em; }
+        main input, main select, main textarea { border-radius:10px !important; }
+        main button, header button { transition:filter .16s ease,box-shadow .16s ease,border-color .16s ease !important; }
+        main button:focus-visible, header button:focus-visible, #sq-desktop-sidebar button:focus-visible { outline:2px solid var(--sq-accent); outline-offset:3px; }
+        .mobile-bottom-nav { border-top:1px solid var(--sq-ui-line) !important; background:color-mix(in srgb,var(--bg-card) 94%,transparent) !important; backdrop-filter:blur(18px); }
+        .mobile-nav-btn { border-radius:12px !important; }
+        .mobile-nav-btn[aria-current="page"] { background:color-mix(in srgb,var(--sq-accent) 12%,transparent) !important; }
+        @media (prefers-reduced-motion:reduce) { main *, #sq-desktop-sidebar * { transition:none !important; } }
+</style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="theme-slate min-h-screen flex flex-col antialiased">
@@ -404,7 +427,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
-                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v9.0</span>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v9.7</span>
                     </div>
                     <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
                 </div>
@@ -1060,6 +1083,7 @@
                         <h3 class="text-base font-black text-indigo-300">V9 — The Mass UI Overhaul</h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Introduced the Appearance Studio with accent colour, card corners, layout density, text size, motion and contrast controls.</li><li>Refined surfaces and interactions while keeping appearance preferences separate from planner data.</li></ul>
                         <div class="ml-2 sm:ml-4 space-y-2">
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.7 — Midnight Atlas</div><p class="text-xs opacity-65">A styling-only visual refresh with a richer midnight palette, clearer active navigation, refined card borders, restrained depth and more consistent controls. Existing page layout, tab behavior and planner logic are unchanged.</p></div>
                             
                     <div><label for="input-difficulty" class="block text-xs font-extrabold uppercase tracking-wider">Difficulty / annoyance (1–5)</label><div class="flex items-center gap-2 mt-1"><select id="input-difficulty" onchange="updatePriorityRecommendations()" class="min-w-0 flex-1 px-3 py-2 rounded-xl themed-card border text-xs"><option value="1">1 — Very easy</option><option value="2">2 — Easy</option><option value="3" selected>3 — Moderate</option><option value="4">4 — Difficult</option><option value="5">5 — Very difficult / annoying</option></select><button type="button" onclick="applyRecommendedImportance()" id="apply-importance-btn" class="hidden bg-violet-600 hover:bg-violet-500 text-white text-xs px-3 py-2 rounded-xl font-bold">Apply importance</button></div><div id="importance-rec-text" class="text-[11px] opacity-70 mt-1">Importance considers task type, difficulty and effort. Subject is context, not an automatic penalty.</div></div>
                 </div>
