@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v950-complete-refresh';
+const CACHE_NAME = 'studyquest-v951-release-log-hierarchy';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
