@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v961-emergency-layout-repair';
+const CACHE_NAME = 'studyquest-pre-v95-stable-ui';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
