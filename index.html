@@ -390,107 +390,6 @@
         }
 
     
-        /* V9.5 — complete visual refresh: elevated surfaces, calmer rhythm, responsive workspace */
-        :root { --sq-radius:20px; --sq-shadow:0 14px 40px rgba(0,0,0,.16); --sq-line:color-mix(in srgb,var(--border-color) 78%,transparent); }
-        html { scroll-behavior:smooth; scrollbar-gutter:stable; }
-        body { letter-spacing:-.012em; background-image:radial-gradient(ellipse at 12% 0%,color-mix(in srgb,var(--sq-accent,#818cf8) 10%,transparent),transparent 36%),radial-gradient(ellipse at 92% 18%,rgba(139,92,246,.075),transparent 32%); }
-        body, button, input, select, textarea { font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
-        button { transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease; }
-        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline:3px solid color-mix(in srgb,var(--sq-accent,#818cf8) 75%,white); outline-offset:3px; }
-        ::selection { background:color-mix(in srgb,var(--sq-accent,#818cf8) 38%,transparent); }
-        .themed-card { border-color:var(--sq-line,var(--border-color)) !important; box-shadow:0 8px 28px rgba(0,0,0,.075); }
-        .themed-card-sub { border-color:var(--sq-line,var(--border-color)) !important; }
-        main > div[id^="tab-"] { animation:sqPageEnter .24s ease both; }
-        main > div[id^="tab-"].hidden { display:none !important; animation:none; }
-        @keyframes sqPageEnter { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-        main { min-height:calc(100vh - 70px); }
-        main > div[id^="tab-"] > section, main > div[id^="tab-"] > .themed-card { min-width:0; }
-        main .rounded-3xl { border-radius:var(--sq-radius); }
-        main .rounded-2xl { border-radius:16px; }
-        main .themed-card.border, main .themed-card-sub.border { transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease; }
-        main .themed-card.border:hover { border-color:color-mix(in srgb,var(--sq-accent,#818cf8) 25%,var(--border-color)) !important; }
-        main .grid > .themed-card { min-width:0; }
-        header.themed-card { background:color-mix(in srgb,var(--bg-card) 90%,transparent); border-color:var(--sq-line,var(--border-color)); box-shadow:0 8px 30px rgba(0,0,0,.08); }
-        header > div { min-height:74px; }
-        header h1 { letter-spacing:-.055em; }
-        header button { border-radius:14px; }
-        #sq-desktop-sidebar { background:color-mix(in srgb,var(--bg-card) 94%,var(--bg-main)); border-right:1px solid var(--sq-line,var(--border-color)); padding:24px 13px 16px; }
-        .sq-side-brand { padding:0 9px 29px; }
-        .sq-brand-mark { border-radius:14px; }
-        #sq-desktop-sidebar > button, .sq-side-bottom > button { position:relative; min-height:43px; border-radius:12px; padding-inline:12px; }
-        #sq-desktop-sidebar > button.sq-side-active { background:linear-gradient(100deg,color-mix(in srgb,var(--sq-accent,#818cf8) 19%,transparent),color-mix(in srgb,var(--sq-accent,#818cf8) 7%,transparent)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sq-accent,#818cf8) 19%,transparent); font-weight:800; }
-        #sq-desktop-sidebar > button.sq-side-active:before { content:""; position:absolute; left:-13px; top:10px; bottom:10px; width:3px; border-radius:0 4px 4px 0; background:var(--sq-accent,#818cf8); }
-        #tab-dashboard > section:first-child h2 { font-size:clamp(1.65rem,2.6vw,2.35rem); letter-spacing:-.06em; line-height:1.12; }
-        #tab-dashboard > section:first-child p { max-width:620px; line-height:1.65; }
-        #tab-dashboard > section:nth-child(2) > div { position:relative; overflow:hidden; border-radius:18px; }
-        #tab-dashboard > section:nth-child(2) > div:after { content:""; position:absolute; top:-30px; right:-30px; width:90px; height:90px; border-radius:50%; background:color-mix(in srgb,var(--sq-accent,#818cf8) 7%,transparent); pointer-events:none; }
-        #tab-dashboard > section:nth-child(2) > div > div:nth-child(2) { line-height:1.1; }
-        #tab-dashboard .themed-card { border-radius:18px; }
-        #tab-dashboard button, main button { min-height:34px; }
-        main button.bg-indigo-600 { box-shadow:0 5px 16px color-mix(in srgb,var(--sq-accent,#818cf8) 22%,transparent); }
-        main button.bg-indigo-600:hover { transform:translateY(-1px); filter:brightness(1.07); }
-        input, select, textarea { border-radius:12px !important; }
-        .mobile-bottom-nav { border-top:1px solid var(--sq-line,var(--border-color)); background:color-mix(in srgb,var(--bg-card) 92%,transparent); backdrop-filter:blur(22px); padding-bottom:max(8px,env(safe-area-inset-bottom)); }
-        .mobile-nav-btn { min-height:55px; border-radius:13px; margin:5px 3px; }
-        .mobile-nav-btn[aria-current="page"] { background:color-mix(in srgb,var(--sq-accent,#818cf8) 13%,transparent); color:var(--sq-accent,#818cf8); }
-        #task-modal > div { box-shadow:0 28px 90px rgba(0,0,0,.4); border-color:var(--sq-line,var(--border-color)); }
-        #settings-panel-updates article, #settings-panel-general .themed-card, #settings-panel-cloud .themed-card { border-radius:16px; }
-        @media (min-width:1024px) {
-          body { padding-left:236px; }
-          body > header { margin-left:-236px; padding-left:236px; }
-          body > header > div { max-width:none; padding-left:30px; padding-right:30px; }
-          body > main { max-width:none; width:100%; padding:30px clamp(24px,3vw,48px) 46px; }
-          #sq-desktop-sidebar { width:220px; }
-        }
-        @media (max-width:1023px) {
-          body { background-image:radial-gradient(ellipse at 20% 0%,color-mix(in srgb,var(--sq-accent,#818cf8) 8%,transparent),transparent 42%); }
-          body > main { padding-bottom:calc(88px + env(safe-area-inset-bottom)); }
-        }
-        @media (max-width:640px) {
-          header > div { min-height:62px; }
-          main { padding-inline:14px !important; }
-          #tab-dashboard > section:first-child { align-items:stretch; }
-          #tab-dashboard > section:first-child > div:last-child { display:flex; flex-wrap:wrap; }
-          #tab-dashboard > section:nth-child(2) > div { padding:14px; }
-          #tab-dashboard > section:nth-child(2) > div > div:nth-child(2) { font-size:1.65rem; }
-          main .p-6 { padding:1.1rem; }
-          main .p-8 { padding:1.25rem; }
-        }
-        @media (prefers-reduced-motion:reduce) {
-          *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
-        }
- 
-        /* V9.6 emergency layout repair — remove fragile named-area placement */
-        #tab-dashboard:not(.hidden) { display:flex; flex-direction:column; gap:18px; width:100%; min-width:0; }
-        #tab-dashboard > section { grid-area:auto !important; grid-column:auto !important; grid-row:auto !important; width:100%; min-width:0; }
-        #tab-dashboard > section:nth-child(2) { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
-        #tab-dashboard > section:nth-child(3), #tab-dashboard > section:nth-child(4) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
-        #tab-dashboard > section:nth-child(5) > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-        #tab-dashboard > section:nth-child(5) > div > * { min-width:0; }
-        #tab-dashboard > section:nth-child(9) { overflow:hidden; }
-        @media (min-width:1024px) {
-          body > main { min-width:0; }
-          #tab-dashboard:not(.hidden) { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr); gap:20px; align-items:start; }
-          #tab-dashboard > section:nth-child(1), #tab-dashboard > section:nth-child(2),
-          #tab-dashboard > section:nth-child(7), #tab-dashboard > section:nth-child(8),
-          #tab-dashboard > section:nth-child(9), #tab-dashboard > section:nth-child(10) { grid-column:1 / -1 !important; }
-          #tab-dashboard > section:nth-child(3), #tab-dashboard > section:nth-child(4),
-          #tab-dashboard > section:nth-child(5), #tab-dashboard > section:nth-child(6) { align-self:stretch; }
-        }
-        @media (min-width:640px) and (max-width:1023px) {
-          #tab-dashboard:not(.hidden) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-          #tab-dashboard > section:nth-child(1), #tab-dashboard > section:nth-child(2),
-          #tab-dashboard > section:nth-child(n+7) { grid-column:1 / -1 !important; }
-          #tab-dashboard > section:nth-child(2) { grid-template-columns:repeat(4,minmax(0,1fr)); }
-          #tab-dashboard > section:nth-child(3), #tab-dashboard > section:nth-child(4) { grid-template-columns:minmax(0,1fr); }
-        }
-        @media (max-width:639px) {
-          #tab-dashboard:not(.hidden) { display:flex; flex-direction:column; gap:15px; }
-          #tab-dashboard > section:nth-child(2) { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-          #tab-dashboard > section:nth-child(3), #tab-dashboard > section:nth-child(4) { grid-template-columns:minmax(0,1fr); }
-          #tab-dashboard > section:nth-child(5) > div { grid-template-columns:minmax(0,1fr); }
-        }
-        @media (prefers-reduced-motion:reduce) { #tab-dashboard:not(.hidden) { animation:none; } }
         </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -505,7 +404,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">StudyQuest</h1>
-                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v9.6</span>
+                        <span class="text-[9px] bg-indigo-500/15 text-indigo-300 font-extrabold px-1.5 py-0.5 rounded-md border border-indigo-500/25">v9.0</span>
                     </div>
                     <p class="text-[11px] opacity-60 hidden sm:block">Your study space</p>
                 </div>
@@ -1162,8 +1061,7 @@
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Introduced the Appearance Studio with accent colour, card corners, layout density, text size, motion and contrast controls.</li><li>Refined surfaces and interactions while keeping appearance preferences separate from planner data.</li></ul>
                         <div class="ml-2 sm:ml-4 space-y-2">
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.6 — Dashboard Reimagined</div><p class="text-xs opacity-65">Rebuilt the dashboard's layout hierarchy into a workspace: distinct focus and upcoming-work columns, compact KPI tiles, grouped shortcuts, and a wider dedicated task matrix. Responsive layouts adapt the arrangement to desktop, tablet and mobile instead of only restyling the same structure.</p></div>
-                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.5 — The Complete Refresh</div><p class="text-xs opacity-65">A full visual system refresh with improved spacing, refined surfaces, stronger typography, more consistent cards and controls, responsive navigation, accessible focus states, subtle motion and reduced-motion support. Existing planner workflows and data storage are retained.</p></div>
-                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.1.1 — Sidebar Active-State Fix</div><p class="text-xs opacity-65">Fixed sidebar highlighting so the selected navigation item follows the page you open instead of leaving Overview highlighted.</p></div>
+                            V9.1.1 — Sidebar Active-State Fix</div><p class="text-xs opacity-65">Fixed sidebar highlighting so the selected navigation item follows the page you open instead of leaving Overview highlighted.</p></div>
                             <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V9.1 — Dashboard Tab Visibility Fix</div><p class="text-xs opacity-65">Fixed a CSS layout conflict that could leave the Overview dashboard visible beneath other sections. The dashboard grid now applies only when Overview is active.</p></div>
                         </div>
                     </article>
