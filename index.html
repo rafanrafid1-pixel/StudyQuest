@@ -329,6 +329,33 @@
         .hover\\:bg-indigo-500:hover { background-color: color-mix(in srgb, var(--sq-accent) 82%, white) !important; }
         .text-indigo-400, .text-indigo-300 { color: var(--sq-accent) !important; }
 
+
+        /* V9 desktop sidebar: isolated navigation restoration; leave dashboard and task layouts unchanged. */
+        #sq-desktop-sidebar { display: none; }
+        @media (min-width: 1024px) {
+          body { padding-left: 236px; }
+          #sq-desktop-sidebar {
+            display: flex; flex-direction: column; position: fixed; z-index: 45; left: 0; top: 0; bottom: 0;
+            width: 220px; padding: 25px 15px 16px; background: var(--bg-card);
+            border-right: 1px solid var(--border-color); box-shadow: 10px 0 35px rgba(0,0,0,.10);
+          }
+          .sq-side-brand { display: flex; align-items: center; gap: 11px; padding: 0 8px 30px; }
+          .sq-brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; color: white; background: linear-gradient(135deg,var(--sq-accent),#8b5cf6); box-shadow: 0 7px 20px color-mix(in srgb,var(--sq-accent) 30%,transparent); }
+          .sq-side-brand strong { display: block; font-size: 15px; letter-spacing: -.04em; }
+          .sq-side-brand small { display: block; margin-top: 3px; font-size: 8px; letter-spacing: .15em; opacity: .48; font-weight: 900; }
+          .sq-side-label { padding: 14px 10px 8px; font-size: 9px; letter-spacing: .16em; font-weight: 900; opacity: .42; }
+          #sq-desktop-sidebar > button, .sq-side-bottom > button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 41px; padding: 0 11px; border: 0; border-radius: 11px; text-align: left; background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 700; }
+          #sq-desktop-sidebar > button i, .sq-side-bottom > button i { width: 16px; text-align: center; font-size: 13px; }
+          #sq-desktop-sidebar > button:hover, .sq-side-bottom > button:hover { background: color-mix(in srgb,var(--sq-accent) 10%,transparent); color: var(--text-main); }
+          #sq-desktop-sidebar > button.sq-side-active, .sq-side-bottom > button.sq-side-active { background: color-mix(in srgb,var(--sq-accent) 16%,transparent); color: var(--sq-accent); }
+          .sq-side-bottom { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border-color); }
+          .sq-side-footnote { padding: 18px 10px 2px; font-size: 9px; opacity: .38; }
+          body > header { margin-left: -236px; padding-left: 236px; }
+          body > header > div { max-width: none; padding-left: 28px; padding-right: 28px; }
+          body > main { max-width: none; width: 100%; padding: 25px 30px 38px; }
+        }
+        @media (max-width: 1023px) { #sq-desktop-sidebar { display: none !important; } }
+
         @media (max-width: 640px) {
             .themed-card, .themed-card-sub { border-radius: min(var(--sq-radius), 18px); }
             #tab-settings > .themed-card { padding: 1rem; }
@@ -368,6 +395,25 @@
         </div>
     </header>
 
+
+    <aside id="sq-desktop-sidebar" aria-label="StudyQuest workspace navigation">
+        <div class="sq-side-brand"><span class="sq-brand-mark"><i class="fa-solid fa-graduation-cap"></i></span><span><strong>StudyQuest</strong><small>YOUR STUDY SPACE</small></span></div>
+        <p class="sq-side-label">WORKSPACE</p>
+        <button type="button" onclick="switchTab('dashboard')" data-sq-tab="dashboard"><i class="fa-solid fa-house"></i> Overview</button>
+        <button type="button" onclick="switchTab('tasks')" data-sq-tab="tasks"><i class="fa-solid fa-list-check"></i> All tasks</button>
+        <button type="button" onclick="switchTab('graph')" data-sq-tab="graph"><i class="fa-solid fa-chart-line"></i> Task matrix</button>
+        <button type="button" onclick="switchTab('plan')" data-sq-tab="plan"><i class="fa-solid fa-calendar-week"></i> Study plan</button>
+        <button type="button" onclick="switchTab('revision')" data-sq-tab="revision"><i class="fa-solid fa-book-open"></i> Revision</button>
+        <p class="sq-side-label">TRACKING</p>
+        <button type="button" onclick="switchTab('projects')" data-sq-tab="projects"><i class="fa-solid fa-folder-open"></i> Projects</button>
+        <button type="button" onclick="switchTab('stats')" data-sq-tab="stats"><i class="fa-solid fa-chart-column"></i> Analytics</button>
+        <button type="button" onclick="switchTab('xp')" data-sq-tab="xp"><i class="fa-solid fa-trophy"></i> XP &amp; levels</button>
+        <div class="sq-side-bottom">
+          <button type="button" onclick="switchTab('guide')" data-sq-tab="guide"><i class="fa-solid fa-circle-question"></i> Help guide</button>
+          <button type="button" onclick="switchTab('settings')" data-sq-tab="settings"><i class="fa-solid fa-sliders"></i> Settings</button>
+          <div class="sq-side-footnote">Small steps. Real progress.</div>
+        </div>
+    </aside>
 
     <nav class="mobile-bottom-nav" aria-label="Main mobile navigation">
         <button type="button" class="mobile-nav-btn" data-mobile-tab="dashboard" onclick="switchTab('dashboard')" aria-current="page"><i class="fa-solid fa-house"></i><span>Home</span></button>
@@ -1187,6 +1233,13 @@
                     if (btn) btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all opacity-70 hover:opacity-100 flex items-center gap-2";
                     if (btnMb) btnMb.className = "text-xs font-semibold opacity-70 flex items-center gap-1";
                 }
+            });
+
+            document.querySelectorAll('#sq-desktop-sidebar [data-sq-tab]').forEach(sideBtn => {
+                const active = sideBtn.dataset.sqTab === tabId;
+                sideBtn.classList.toggle('sq-side-active', active);
+                if (active) sideBtn.setAttribute('aria-current', 'page');
+                else sideBtn.removeAttribute('aria-current');
             });
 
             document.querySelectorAll('.mobile-nav-btn').forEach(mobileBtn => {
