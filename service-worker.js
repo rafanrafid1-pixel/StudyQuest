@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v970-update-log-repair';
+const CACHE_NAME = 'studyquest-v900-stable-log-restored';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
