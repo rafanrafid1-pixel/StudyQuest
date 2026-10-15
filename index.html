@@ -428,6 +428,15 @@
 
         <!-- TAB 0: DAILY DASHBOARD -->
         <div id="tab-dashboard" class="space-y-6">
+            <section class="themed-card border rounded-2xl p-5 sm:p-6 space-y-4" aria-labelledby="today-plan-heading">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div><p class="text-[10px] uppercase font-extrabold tracking-wider opacity-60 mb-1">V10 · Your next steps</p><h3 id="today-plan-heading" class="text-xl font-black">Today's Plan</h3><p id="today-plan-summary" class="text-sm opacity-65 mt-1">A manageable place to start, based on your scheduled sessions and deadlines.</p></div>
+                    <div class="flex flex-wrap gap-2"><button type="button" onclick="autoScheduleHomework()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold">Auto-schedule homework</button><button type="button" onclick="switchTab('plan')" class="themed-card-sub border px-4 py-2.5 rounded-xl text-xs font-bold">Edit weekly plan</button></div>
+                </div>
+                <div id="today-plan-list" class="space-y-2"></div>
+                <div id="today-plan-empty" class="themed-card-sub border border-dashed rounded-xl p-4 text-sm opacity-75">No sessions planned for today. Schedule homework to get a clear next step.</div>
+                <p id="today-plan-message" class="text-xs opacity-60" aria-live="polite"></p>
+            </section>
             <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div><h2 class="text-2xl font-black">Your study day</h2><p id="dashboard-date-label" class="text-sm opacity-65 mt-1">Your priorities, deadlines and revision at a glance.</p></div>
                 <div class="flex gap-2"><button onclick="openTaskModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold"><i class="fa-solid fa-plus mr-1"></i> Quick add</button><button onclick="switchTab('plan')" class="themed-card-sub border px-4 py-2.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-calendar-week mr-1"></i> Plan week</button></div>
@@ -2109,6 +2118,7 @@
         function getWeekActivity() { return (STATE.activityLog || []).filter(e => isThisWeek(e.timestamp)); }
 
         function renderDashboard() {
+            renderTodayPlan();
             renderDashboardStats();
             const dateEl = document.getElementById('dashboard-date-label'); if (dateEl) dateEl.textContent = new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'}) + ' · Your priorities, deadlines and revision at a glance.';
             const work = getAllWorkItems().filter(w => !w.completed);
@@ -2120,6 +2130,54 @@
             const completed=week.filter(e=>['task_completed','milestone_completed'].includes(e.type)).length; const revisions=week.filter(e=>e.type==='revision_session').length; const xp=week.reduce((sum,e)=>sum+(Number(e.xpEarned)||0),0); const minutes=week.reduce((sum,e)=>sum+(Number(e.actualMinutes)||0),0);
             set('home-week-completed',completed);set('home-week-sessions',revisions);set('home-week-xp',xp);set('home-week-time',minutesLabel(minutes));
         }
+        function renderTodayPlan() {
+            const list = document.getElementById('today-plan-list');
+            const empty = document.getElementById('today-plan-empty');
+            const summary = document.getElementById('today-plan-summary');
+            const message = document.getElementById('today-plan-message');
+            if (!list || !empty) return;
+            list.innerHTML = '';
+            const todayKey = dateKey(startOfToday());
+            const sessions = (STATE.plannedSessions || []).filter(s => s.date === todayKey && s.status === 'planned').sort((a,b) => (a.start || '').localeCompare(b.start || ''));
+            empty.classList.toggle('hidden', sessions.length > 0);
+            if (summary) summary.textContent = sessions.length ? `${sessions.length} planned session${sessions.length === 1 ? '' : 's'} for today. Start with the next manageable step.` : 'A manageable place to start, based on your scheduled sessions and deadlines.';
+            if (message && !sessions.length) {
+                const active = (STATE.tasks || []).filter(t => t.deadline);
+                message.textContent = active.length ? 'You have homework with deadlines. Build a draft schedule, then adjust sessions to fit your week.' : 'Add homework with a deadline to build a plan ahead of time.';
+            } else if (message) message.textContent = '';
+            sessions.forEach(session => {
+                const row = document.createElement('div');
+                row.className = 'themed-card-sub border rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3';
+                row.innerHTML = `<div class="flex-1 min-w-0"><div class="text-xs font-bold">${escapeHtml(session.title)}</div><div class="text-[10px] opacity-65 mt-1">${escapeHtml(session.subject || 'Other')} · ${escapeHtml(session.start || '')}–${escapeHtml(session.end || '')} · ${Number(session.estimatedMinutes) || 0} min</div><div class="text-[10px] opacity-60 mt-1">${session.sourceType === 'task' ? 'Homework session' : session.sourceType === 'milestone' ? 'Project milestone' : 'Study session'}</div></div><div class="flex flex-wrap gap-2"><button type="button" onclick="switchTab('plan')" class="themed-card border rounded-lg px-3 py-2 text-[10px] font-bold">Edit schedule</button>${session.sourceType === 'task' ? `<button type="button" onclick="completeTask('${escapeAttr(session.sourceId)}')" class="bg-emerald-600 text-white rounded-lg px-3 py-2 text-[10px] font-bold">Mark homework done</button>` : ''}</div>`;
+                list.appendChild(row);
+            });
+        }
+        function autoScheduleHomework() {
+            if ((STATE.scheduleSuggestions || []).length && !confirm('Replace the current unsaved schedule suggestions with a fresh draft?')) return;
+            generateScheduleSuggestions();
+            const suggestions = [...(STATE.scheduleSuggestions || [])];
+            if (!suggestions.length) {
+                const message = document.getElementById('today-plan-message');
+                if (message) message.textContent = 'No sessions fit the current availability and deadlines. Review your available times in the weekly plan.';
+                return;
+            }
+            const accepted = [];
+            const conflicts = [];
+            suggestions.forEach(suggestion => {
+                const conflict = (STATE.plannedSessions || []).some(s => s.status !== 'dismissed' && s.date === suggestion.date && s.status !== 'completed' && timeMinutes(s.start) < timeMinutes(suggestion.end) && timeMinutes(s.end) > timeMinutes(suggestion.start));
+                if (conflict) { conflicts.push(suggestion); return; }
+                STATE.plannedSessions = STATE.plannedSessions || [];
+                STATE.plannedSessions.push({ ...suggestion, id: createId('session'), status: 'planned', acceptedAt: new Date().toISOString() });
+                accepted.push(suggestion);
+            });
+            STATE.scheduleSuggestions = [];
+            saveLocalStorage();
+            renderStudyPlan();
+            renderDashboard();
+            const message = document.getElementById('today-plan-message');
+            if (message) message.textContent = accepted.length ? `Scheduled ${accepted.length} session${accepted.length === 1 ? '' : 's'} across the next week. You can review and adjust them in the weekly plan.${conflicts.length ? ` ${conflicts.length} conflicting suggestion${conflicts.length === 1 ? ' was' : 's were'} skipped.` : ''}` : 'No new sessions were scheduled. Review your availability or existing sessions.';
+        }
+
         function workPriority(item) { const days=daysUntilDeadline(item.deadline); const dueBoost=days===null?0:days<0?120:days===0?100:days===1?80:days<=3?55:days<=7?30:10; return dueBoost + (Number(item.x)||50)*0.25 + (Number(item.y)||50)*0.35 + (item.workKind==='milestone'?5:0); }
         function deleteTask(id) { const task=STATE.tasks.find(t=>t.id===id); if(!task||!confirm(`Delete “${task.title}”? You can undo this action.`))return; pushUndo('Delete task'); STATE.tasks=STATE.tasks.filter(t=>t.id!==id); STATE.scheduleSuggestions=(STATE.scheduleSuggestions||[]).filter(s=>!(s.sourceType==='task'&&s.sourceId===id)); STATE.plannedSessions=(STATE.plannedSessions||[]).filter(s=>!(s.sourceType==='task'&&s.sourceId===id&&s.status==='planned')); recordActivity({type:'task_deleted',timestamp:new Date().toISOString(),subject:task.subject||'Other',taskId:id,title:task.title}); saveLocalStorage(); renderAll(); renderDashboard(); }
         function restoreCompletedTask(id, completedAt) { const idx=(STATE.completedTasks||[]).findIndex(t=>t.id===id && (!completedAt||t.completedAt===completedAt)); if(idx<0)return; pushUndo('Restore completed task'); const task=STATE.completedTasks[idx]; STATE.completedTasks.splice(idx,1); const restored={...task}; delete restored.completedAt; delete restored.earnedXP; restored.updatedAt=new Date().toISOString(); STATE.tasks.push(restored); STATE.xp=Math.max(0,Number(STATE.xp||0)-(Number(task.earnedXP)||0)); STATE.activityLog=(STATE.activityLog||[]).filter(e=>!(e.type==='task_completed'&&e.taskId===id&&e.timestamp===task.completedAt)); recordActivity({type:'task_restored',timestamp:new Date().toISOString(),subject:task.subject||'Other',taskId:id,title:task.title}); saveLocalStorage(); renderAll(); renderDashboard(); }
