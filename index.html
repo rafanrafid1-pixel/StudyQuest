@@ -2246,12 +2246,12 @@
             if (!session || session.status === 'completed') return;
             const date = prompt('Session date (YYYY-MM-DD):', session.date || dateKey(startOfToday()));
             if (date === null) return;
-            if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || Number.isNaN(new Date(date + 'T12:00:00').getTime())) { alert('Enter a valid date in YYYY-MM-DD format.'); return; }
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(new Date(date + 'T12:00:00').getTime())) { alert('Enter a valid date in YYYY-MM-DD format.'); return; }
             const start = prompt('Start time (24-hour HH:MM):', session.start || '16:00');
             if (start === null) return;
             const end = prompt('End time (24-hour HH:MM):', session.end || '16:30');
             if (end === null) return;
-            if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(start) || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(end) || timeMinutes(end) <= timeMinutes(start)) { alert('Enter valid 24-hour times, with the end after the start.'); return; }
+            if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end) || timeMinutes(end) <= timeMinutes(start)) { alert('Enter valid 24-hour times, with the end after the start.'); return; }
             const conflict = (STATE.plannedSessions || []).some(s => s.id !== id && s.status === 'planned' && s.date === date && timeMinutes(s.start) < timeMinutes(end) && timeMinutes(s.end) > timeMinutes(start));
             if (conflict) { alert('That time overlaps another planned session. Choose a different time.'); return; }
             pushUndo('Edit planned session');
