@@ -51,8 +51,8 @@
     else if (accepted) plan.insertBefore(section, accepted);
     else plan.appendChild(section);
     section.querySelector('#sq-board-today').addEventListener('click', renderBoard);
-    section.addEventListener('dragstart', onDragStart);
-    section.addEventListener('dragend', onDragEnd);
+    document.addEventListener('dragstart', onDragStart);
+    document.addEventListener('dragend', onDragEnd);
     section.addEventListener('dragover', onDragOver);
     section.addEventListener('dragleave', onDragLeave);
     section.addEventListener('drop', onDrop);
