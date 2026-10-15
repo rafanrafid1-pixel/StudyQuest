@@ -9,17 +9,22 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      #${BOARD_ID} .sq-week-grid { display:grid; grid-template-columns:repeat(7,minmax(150px,1fr)); gap:10px; overflow-x:auto; padding-bottom:8px; }
-      #${BOARD_ID} .sq-day-column { min-height:250px; border:1px solid var(--border-color); border-radius:14px; background:var(--bg-card-sub); padding:10px; transition:border-color .15s,background .15s; }
-      #${BOARD_ID} .sq-day-column.sq-drop-ready { border:2px dashed #818cf8; background:color-mix(in srgb,#818cf8 9%,var(--bg-card-sub)); }
-      #${BOARD_ID} .sq-day-column.sq-today { border-color:#818cf8; }
-      #${BOARD_ID} .sq-session-card { cursor:grab; border:1px solid var(--border-color); border-left:3px solid #818cf8; border-radius:10px; padding:9px; margin-top:8px; background:var(--bg-card); }
-      #${BOARD_ID} .sq-session-card:active { cursor:grabbing; }
-      #${BOARD_ID} .sq-session-card.sq-dragging { opacity:.4; }
-      #${BOARD_ID} .sq-session-time { font-size:10px; opacity:.7; margin-top:4px; }
-      #${BOARD_ID} .sq-drop-hint { border:1px dashed var(--border-color); border-radius:9px; padding:12px 5px; text-align:center; font-size:10px; opacity:.55; margin-top:8px; }
-      #${BOARD_ID} .sq-board-note { font-size:11px; opacity:.65; }
-      @media(max-width:700px) { #${BOARD_ID} .sq-week-grid { grid-template-columns:repeat(7,minmax(170px,1fr)); } }
+      #${BOARD_ID}{color:#e5edff;background:linear-gradient(145deg,#071329,#081a35 60%,#071226)!important;border:1px solid #17365e!important;border-radius:20px!important;padding:18px!important}
+      #${BOARD_ID} .sq-week-grid{display:grid;grid-template-columns:repeat(7,minmax(135px,1fr));gap:0;overflow-x:auto;border:1px solid #17365e;border-radius:14px;background:#06142b;padding-bottom:0}
+      #${BOARD_ID} .sq-day-column{min-height:460px;border:0;border-left:1px solid #17365e;border-radius:0;background:repeating-linear-gradient(to bottom,transparent 0,transparent 55px,#163153 56px);padding:10px 7px;transition:background .15s;min-width:0}
+      #${BOARD_ID} .sq-day-column.sq-drop-ready{outline:2px dashed #818cf8;outline-offset:-3px;background-color:#122650}
+      #${BOARD_ID} .sq-day-column.sq-today{background-color:#0d2046;box-shadow:inset 0 3px #6868ff}
+      #${BOARD_ID} .sq-day-column>div:first-child{padding:5px 3px 12px;border-bottom:1px solid #1b3a63;margin-bottom:8px}
+      #${BOARD_ID} .sq-session-card{cursor:grab;border:1px solid #2b6f88;border-left:3px solid #2dd4bf;border-radius:9px;padding:9px;margin-top:8px;background:linear-gradient(135deg,#0b575d,#12465b);box-shadow:0 5px 15px #0002;overflow-wrap:anywhere}
+      #${BOARD_ID} .sq-session-card:nth-of-type(3n){border-color:#8b5cf6;background:linear-gradient(135deg,#3a237d,#202e78)}
+      #${BOARD_ID} .sq-session-card:nth-of-type(3n + 1){border-color:#ec659f;background:linear-gradient(135deg,#67204d,#431e52)}
+      #${BOARD_ID} .sq-session-card:active{cursor:grabbing}
+      #${BOARD_ID} .sq-session-card.sq-dragging{opacity:.4}
+      #${BOARD_ID} .sq-session-time{font-size:10px;color:#b5d1f7;margin-top:5px}
+      #${BOARD_ID} .sq-drop-hint{border:1px dashed #23456f;border-radius:9px;padding:16px 5px;text-align:center;font-size:10px;color:#9db8e7;margin-top:8px}
+      #${BOARD_ID} .sq-board-note{font-size:11px;color:#9db8e7}
+      #${BOARD_ID} .sq-day-column button{background:#0b2040;color:#dbeafe;border-color:#284d7b}
+      @media(max-width:700px){#${BOARD_ID} .sq-week-grid{grid-template-columns:repeat(7,minmax(170px,1fr))}}
     `;
     document.head.appendChild(style);
   }
@@ -39,17 +44,19 @@
     section.className = 'themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-4';
     section.innerHTML = `
       <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div><h3 class="text-lg font-black"><i class="fa-solid fa-grip text-indigo-400 mr-2"></i>Visual weekly planner</h3>
-        <p class="sq-board-note mt-1">Drag a planned session to another day, or drag a suggestion onto a day to schedule it. Times stay the same when moving sessions.</p></div>
+        <div><h3 class="text-lg font-black"><i class="fa-solid fa-grip text-indigo-400 mr-2"></i>Weekly Study Planner</h3>
+        <p class="sq-board-note mt-1">Your week at a glance. Drag sessions between days, or drag a suggestion from the list below onto a day to schedule it.</p></div>
         <button type="button" id="sq-board-today" class="themed-card-sub border rounded-xl px-3 py-2 text-xs font-bold">This week</button>
       </div>
       <div id="sq-week-grid" class="sq-week-grid" aria-label="Drag-and-drop weekly study plan"></div>
       <p id="sq-board-status" class="text-xs opacity-70" aria-live="polite"></p>`;
     const suggestions = plan.querySelector('#schedule-suggestions-list')?.closest('section');
     const accepted = plan.querySelector('#planned-session-list')?.closest('section');
-    if (suggestions) plan.insertBefore(section, suggestions);
-    else if (accepted) plan.insertBefore(section, accepted);
+    if (suggestions) { plan.insertBefore(section, suggestions); suggestions.style.display='none'; }
+    else if (accepted) { plan.insertBefore(section, accepted); accepted.style.display='none'; }
     else plan.appendChild(section);
+    if (suggestions) suggestions.style.display='none';
+    if (accepted) accepted.style.display='none';
     section.querySelector('#sq-board-today').addEventListener('click', renderBoard);
     document.addEventListener('dragstart', onDragStart);
     document.addEventListener('dragend', onDragEnd);
