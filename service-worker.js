@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v902-deadline-tints';
+const CACHE_NAME = 'studyquest-v903-deadline-text';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
