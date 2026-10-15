@@ -49,6 +49,7 @@
         <button type="button" id="sq-board-today" class="themed-card-sub border rounded-xl px-3 py-2 text-xs font-bold">This week</button>
       </div>
       <div id="sq-week-grid" class="sq-week-grid" aria-label="Drag-and-drop weekly study plan"></div>
+      <div class="mt-4 rounded-xl border p-3" style="border-color:#17365e;background:#081832"><h4 class="font-black text-sm" style="color:#e5edff"><i class="fa-solid fa-layer-group mr-2" style="color:#a5b4fc"></i>Task Pool <span class="text-xs font-normal" style="color:#9db8e7">— drag suggestions into a day</span></h4><div id="sq-task-pool" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3"></div><p id="sq-task-pool-empty" class="sq-drop-hint">Generate suggestions to see tasks here.</p></div>
       <p id="sq-board-status" class="text-xs opacity-70" aria-live="polite"></p>`;
     const suggestions = plan.querySelector('#schedule-suggestions-list')?.closest('section');
     const accepted = plan.querySelector('#planned-session-list')?.closest('section');
@@ -85,6 +86,12 @@
     }).join('');
     grid.querySelectorAll('.sq-edit-session').forEach(b=>b.addEventListener('click',()=>typeof editPlannedSession==='function'&&editPlannedSession(b.dataset.id)));
     grid.querySelectorAll('.sq-remove-session').forEach(b=>b.addEventListener('click',()=>typeof removePlannedSession==='function'&&removePlannedSession(b.dataset.id)));
+    const pool=board.querySelector('#sq-task-pool');
+    const poolEmpty=board.querySelector('#sq-task-pool-empty');
+    const suggestions=STATE.scheduleSuggestions||[];
+    if(pool) pool.innerHTML=suggestions.map(s=>'<div class="sq-session-card" draggable="true" data-sq-suggestion-id="'+esc(s.id)+'" style="border-left-color:#8b5cf6"><div class="text-xs font-extrabold">'+esc(s.title)+'</div><div class="sq-session-time">'+esc(s.subject||'Study')+' · '+esc(s.estimatedMinutes||0)+' min</div><div class="text-[10px] opacity-60 mt-1">'+esc(s.date)+' · '+esc(s.start)+'–'+esc(s.end)+'</div><button type="button" class="sq-accept-suggestion themed-card-sub border rounded-md px-2 py-1 text-[10px] mt-2" data-id="'+esc(s.id)+'">Add to plan</button></div>').join('');
+    if(poolEmpty)poolEmpty.style.display=suggestions.length?'none':'block';
+    pool?.querySelectorAll('.sq-accept-suggestion').forEach(b=>b.addEventListener('click',()=>{if(typeof acceptSuggestion==='function')acceptSuggestion(b.dataset.id)}));
     tagSuggestionSources();
   }
 
