@@ -3,15 +3,16 @@
   const STYLE_ID = 'sq-visual-plan-style';
   const BOARD_ID = 'sq-visual-plan-board';
   let installed = false;
+  let drawerOpen = false;
 
   function addStyles() {
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      #${BOARD_ID}{color:#e5edff;background:linear-gradient(145deg,#071329,#081a35 60%,#071226)!important;border:1px solid #17365e!important;border-radius:20px!important;padding:18px!important}
-      #${BOARD_ID} .sq-week-grid{display:grid;grid-template-columns:repeat(7,minmax(135px,1fr));gap:0;overflow-x:auto;border:1px solid #17365e;border-radius:14px;background:#06142b;padding-bottom:0}
-      #${BOARD_ID} .sq-day-column{min-height:460px;border:0;border-left:1px solid #17365e;border-radius:0;background:repeating-linear-gradient(to bottom,transparent 0,transparent 55px,#163153 56px);padding:10px 7px;transition:background .15s;min-width:0}
+      #${BOARD_ID}{color:#eaf1ff;background:linear-gradient(145deg,#071329,#0a1b38 58%,#071226)!important;border:1px solid #1b3d68!important;border-radius:22px!important;padding:22px!important;box-shadow:0 22px 60px #0004!important}
+      #${BOARD_ID} .sq-week-grid{display:grid;grid-template-columns:repeat(7,minmax(145px,1fr));gap:0;overflow-x:auto;border:1px solid #17365e;border-radius:14px;background:#06142b;padding-bottom:0}
+      #${BOARD_ID} .sq-day-column{min-height:520px;border:0;border-left:1px solid #17365e;border-radius:0;background:repeating-linear-gradient(to bottom,transparent 0,transparent 55px,#163153 56px);padding:10px 7px;transition:background .15s;min-width:0}
       #${BOARD_ID} .sq-day-column.sq-drop-ready{outline:2px dashed #818cf8;outline-offset:-3px;background-color:#122650}
       #${BOARD_ID} .sq-day-column.sq-today{background-color:#0d2046;box-shadow:inset 0 3px #6868ff}
       #${BOARD_ID} .sq-day-column>div:first-child{padding:5px 3px 12px;border-bottom:1px solid #1b3a63;margin-bottom:8px}
@@ -22,7 +23,16 @@
       #${BOARD_ID} .sq-session-card.sq-dragging{opacity:.4}
       #${BOARD_ID} .sq-session-time{font-size:10px;color:#b5d1f7;margin-top:5px}
       #${BOARD_ID} .sq-drop-hint{border:1px dashed #23456f;border-radius:9px;padding:16px 5px;text-align:center;font-size:10px;color:#9db8e7;margin-top:8px}
-      #${BOARD_ID} .sq-board-note{font-size:11px;color:#9db8e7}
+      #${BOARD_ID} .sq-board-note{font-size:12px;color:#9db8e7}
+      #${BOARD_ID} .sq-plan-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+      #${BOARD_ID} .sq-task-drawer{position:fixed;z-index:9999;top:0;right:0;height:100dvh;width:min(390px,92vw);background:#081832;border-left:1px solid #294b7c;box-shadow:-20px 0 70px #0008;padding:20px;overflow:auto;transform:translateX(105%);transition:transform .22s ease;color:#eaf1ff}
+      #${BOARD_ID} .sq-task-drawer.is-open{transform:translateX(0)}
+      #${BOARD_ID} .sq-drawer-backdrop{position:fixed;inset:0;background:#020817aa;z-index:9998;opacity:0;pointer-events:none;transition:opacity .2s}
+      #${BOARD_ID} .sq-drawer-backdrop.is-open{opacity:1;pointer-events:auto}
+      #${BOARD_ID} .sq-pool-task{border:1px solid #294b7c;border-radius:12px;padding:12px;margin-top:9px;background:#0c2040;cursor:grab}
+      #${BOARD_ID} .sq-pool-task:hover{border-color:#8b8cff}
+      #${BOARD_ID} .sq-plan-btn{border:1px solid #345b8d;border-radius:10px;background:#10264a;color:#eaf1ff;padding:9px 12px;font-size:12px;font-weight:800}
+      #${BOARD_ID} .sq-plan-btn-primary{background:linear-gradient(100deg,#4338ca,#6d45d9);border-color:#7771ff;color:white}
       #${BOARD_ID} .sq-day-column button{background:#0b2040;color:#dbeafe;border-color:#284d7b}
       @media(max-width:700px){#${BOARD_ID} .sq-week-grid{grid-template-columns:repeat(7,minmax(170px,1fr))}}
     `;
@@ -43,13 +53,9 @@
     section.id = BOARD_ID;
     section.className = 'themed-card rounded-3xl p-5 sm:p-7 border shadow-xl space-y-4';
     section.innerHTML = `
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div><h3 class="text-lg font-black"><i class="fa-solid fa-grip text-indigo-400 mr-2"></i>Weekly Study Planner</h3>
-        <p class="sq-board-note mt-1">Your week at a glance. Drag sessions between days, or drag a suggestion from the list below onto a day to schedule it.</p></div>
-        <button type="button" id="sq-board-today" class="themed-card-sub border rounded-xl px-3 py-2 text-xs font-bold">This week</button>
-      </div>
+      <div class="sq-plan-top"><div><div style="font-size:10px;letter-spacing:.2em;font-weight:900;color:#8ea9ff">PLAN · FOCUS · ACHIEVE</div><h3 class="text-2xl font-black mt-2" style="color:#f5f7ff"><i class="fa-solid fa-calendar-days mr-2" style="color:#a5b4fc"></i>Weekly Study Planner</h3><p class="sq-board-note mt-2">Your week at a glance. Drag any task onto a day to plan it.</p></div><div class="flex gap-2 flex-wrap"><button type="button" id="sq-board-today" class="sq-plan-btn">This week</button><button type="button" id="sq-open-tasks" class="sq-plan-btn sq-plan-btn-primary"><i class="fa-solid fa-list-check mr-2"></i>All tasks <span id="sq-task-count"></span></button></div></div>
       <div id="sq-week-grid" class="sq-week-grid" aria-label="Drag-and-drop weekly study plan"></div>
-      <div class="mt-4 rounded-xl border p-3" style="border-color:#17365e;background:#081832"><h4 class="font-black text-sm" style="color:#e5edff"><i class="fa-solid fa-layer-group mr-2" style="color:#a5b4fc"></i>Task Pool <span class="text-xs font-normal" style="color:#9db8e7">— drag suggestions into a day</span></h4><div id="sq-task-pool" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3"></div><p id="sq-task-pool-empty" class="sq-drop-hint">Generate suggestions to see tasks here.</p></div>
+      <div id="sq-drawer-backdrop" class="sq-drawer-backdrop"></div><aside id="sq-task-drawer" class="sq-task-drawer" aria-label="All tasks panel"><div class="flex items-center justify-between gap-3"><div><div style="font-size:10px;letter-spacing:.18em;color:#9db8e7;font-weight:800">YOUR TASK LIBRARY</div><h4 class="text-xl font-black mt-1">All tasks</h4><p class="sq-board-note mt-1">Drag any active task into a day.</p></div><button type="button" id="sq-close-tasks" class="sq-plan-btn" aria-label="Close task panel">✕</button></div><input id="sq-task-search" type="search" placeholder="Search your tasks…" class="w-full mt-4 px-3 py-2.5 rounded-xl border" style="background:#0c2040;color:#fff;border-color:#294b7c"><div id="sq-task-library" class="mt-3"></div><p id="sq-task-library-empty" class="sq-drop-hint">No active tasks found.</p><button type="button" id="sq-create-task" class="sq-plan-btn sq-plan-btn-primary w-full mt-4"><i class="fa-solid fa-plus mr-2"></i>Create a task</button></aside>
       <p id="sq-board-status" class="text-xs opacity-70" aria-live="polite"></p>`;
     const suggestions = plan.querySelector('#schedule-suggestions-list')?.closest('section');
     const accepted = plan.querySelector('#planned-session-list')?.closest('section');
@@ -58,7 +64,9 @@
     else plan.appendChild(section);
     if (suggestions) suggestions.style.display='none';
     if (accepted) accepted.style.display='none';
+    Array.from(plan.children).forEach(child=>{if(child!==section)child.style.display='none'});
     section.querySelector('#sq-board-today').addEventListener('click', renderBoard);
+    section.querySelector('#sq-open-tasks').addEventListener('click',()=>toggleDrawer(true));section.querySelector('#sq-close-tasks').addEventListener('click',()=>toggleDrawer(false));section.querySelector('#sq-drawer-backdrop').addEventListener('click',()=>toggleDrawer(false));section.querySelector('#sq-task-search').addEventListener('input',renderTaskLibrary);section.querySelector('#sq-create-task').addEventListener('click',()=>{if(typeof openTaskModal==='function')openTaskModal()});
     document.addEventListener('dragstart', onDragStart);
     document.addEventListener('dragend', onDragEnd);
     section.addEventListener('dragover', onDragOver);
@@ -86,16 +94,13 @@
     }).join('');
     grid.querySelectorAll('.sq-edit-session').forEach(b=>b.addEventListener('click',()=>typeof editPlannedSession==='function'&&editPlannedSession(b.dataset.id)));
     grid.querySelectorAll('.sq-remove-session').forEach(b=>b.addEventListener('click',()=>typeof removePlannedSession==='function'&&removePlannedSession(b.dataset.id)));
-    const pool=board.querySelector('#sq-task-pool');
-    const poolEmpty=board.querySelector('#sq-task-pool-empty');
-    const suggestions=STATE.scheduleSuggestions||[];
-    if(pool) pool.innerHTML=suggestions.map(s=>'<div class="sq-session-card" draggable="true" data-sq-suggestion-id="'+esc(s.id)+'" style="border-left-color:#8b5cf6"><div class="text-xs font-extrabold">'+esc(s.title)+'</div><div class="sq-session-time">'+esc(s.subject||'Study')+' · '+esc(s.estimatedMinutes||0)+' min</div><div class="text-[10px] opacity-60 mt-1">'+esc(s.date)+' · '+esc(s.start)+'–'+esc(s.end)+'</div><button type="button" class="sq-accept-suggestion themed-card-sub border rounded-md px-2 py-1 text-[10px] mt-2" data-id="'+esc(s.id)+'">Add to plan</button></div>').join('');
-    if(poolEmpty)poolEmpty.style.display=suggestions.length?'none':'block';
-    pool?.querySelectorAll('.sq-accept-suggestion').forEach(b=>b.addEventListener('click',()=>{if(typeof acceptSuggestion==='function')acceptSuggestion(b.dataset.id)}));
+    renderTaskLibrary();
     tagSuggestionSources();
   }
 
-  function tagSuggestionSources() {
+  function toggleDrawer(open){drawerOpen=open;const b=board();if(!b)return;b.querySelector('#sq-task-drawer')?.classList.toggle('is-open',open);b.querySelector('#sq-drawer-backdrop')?.classList.toggle('is-open',open);if(open)renderTaskLibrary()}
+  function renderTaskLibrary(){const b=board();if(!b||typeof STATE==='undefined')return;const list=b.querySelector('#sq-task-library'),empty=b.querySelector('#sq-task-library-empty'),count=b.querySelector('#sq-task-count');if(!list)return;const q=(b.querySelector('#sq-task-search')?.value||'').trim().toLowerCase();const tasks=(STATE.tasks||[]).filter(t=>!t.completed&&t.status!=='completed'&&`${t.title||''} ${t.subject||''} ${t.type||''} ${t.notes||''}`.toLowerCase().includes(q));if(count)count.textContent='('+tasks.length+')';list.innerHTML=tasks.map(t=>'<div class="sq-pool-task" draggable="true" data-sq-task-id="'+esc(t.id)+'"><div class="font-extrabold text-sm">'+esc(t.title)+'</div><div class="sq-small mt-1">'+esc(t.subject||'Other')+' · '+esc(t.type||'Task')+'</div><div class="sq-small mt-1">'+(t.deadline?'Due '+esc(t.deadline):'No deadline')+' · '+esc(t.time||t.estimatedTime||'30m')+'</div></div>').join('');if(empty)empty.style.display=tasks.length?'none':'block';}
+  function tagSuggestionSources(){
     document.querySelectorAll('#schedule-suggestions-list > div').forEach(row=>{
       const btn=row.querySelector('button[onclick*="acceptSuggestion"]');
       const match=btn?.getAttribute('onclick')?.match(/acceptSuggestion\(['"]([^'"]+)['"]\)/);
@@ -110,10 +115,12 @@
   function onDragStart(event) {
     const session=event.target.closest('[data-session-id]');
     const suggestion=event.target.closest('[data-sq-suggestion-id]');
+    const task=event.target.closest('[data-sq-task-id]');
     if (session) {
       event.dataTransfer.setData('text/plain','session:'+session.dataset.sessionId);
       event.dataTransfer.effectAllowed='move';
       session.classList.add('sq-dragging');
+    } else if (task) {event.dataTransfer.setData('text/plain','task:'+task.dataset.sqTaskId);event.dataTransfer.effectAllowed='copy';
     } else if (suggestion) {
       event.dataTransfer.setData('text/plain','suggestion:'+suggestion.dataset.sqSuggestionId);
       event.dataTransfer.effectAllowed='move';
@@ -169,6 +176,8 @@
       session.date=date;session.updatedAt=new Date().toISOString();
       saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();
       if(status)status.textContent='Session moved to '+date+'.';
+    } else if(type==='task'){
+      const task=(STATE.tasks||[]).find(t=>String(t.id)===id);if(!task)return;const raw=String(task.time||task.estimatedTime||'30m').toLowerCase(),hm=raw.match(/(\\d+(?:\\.\\d+)?)\\s*h/),mm=raw.match(/(\\d+)\\s*m/),minutes=Math.max(15,Math.round((((hm?+hm[1]*60:0)+(mm?+mm[1]:0))||parseInt(raw,10)||30)/15)*15);const time=findFreeTime(date,minutes,'16:00');if(!time){if(status)status.textContent='No available time fits this task on that day. Adjust availability or choose another day.';return;}if(typeof pushUndo==='function')pushUndo('Schedule task from task library');STATE.plannedSessions=STATE.plannedSessions||[];STATE.plannedSessions.push({id:typeof createId==='function'?createId('session'):'session-'+Date.now(),taskId:task.id,title:task.title,subject:task.subject||'Other',date,start:time.start,end:time.end,estimatedMinutes:minutes,status:'planned',source:'task-library',createdAt:new Date().toISOString()});saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();toggleDrawer(false);if(status)status.textContent='“'+task.title+'” added to '+date+'.';
     } else if(type==='suggestion'){
       const suggestion=(STATE.scheduleSuggestions||[]).find(s=>s.id===id);
       if(!suggestion)return;
