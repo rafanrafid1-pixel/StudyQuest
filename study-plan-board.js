@@ -160,7 +160,7 @@
       if(!suggestion)return;
       const minutes=Number(suggestion.estimatedMinutes)||Math.max(15,timeMinutes(suggestion.end)-timeMinutes(suggestion.start));
       let time={start:suggestion.start,end:suggestion.end};
-      if(overlaps(date,time.start,time.end,null))time=findFreeTime(date,minutes,suggestion.start);
+      if(date!==suggestion.date || overlaps(date,time.start,time.end,null))time=findFreeTime(date,minutes,suggestion.start);
       if(!time){time=findFreeTime(date,minutes,suggestion.start);}
       if(!time){if(status)status.textContent='No free time fits this session on that day. Change availability or choose another day.';return;}
       if(typeof pushUndo==='function')pushUndo('Schedule suggested session');
