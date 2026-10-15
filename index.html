@@ -1610,6 +1610,16 @@
                 const due = dueStatus(item);
                 const card = document.createElement('article');
                 card.className = 'themed-card-sub border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3';
+                // Deadline tint: urgent items get a subtle overlay while preserving the user's theme color.
+                if (!item.completed && due.days !== null) {
+                    if (due.days <= 3) {
+                        card.style.backgroundColor = 'color-mix(in srgb, #ef4444 15%, var(--bg-card-sub))';
+                        card.style.borderColor = 'color-mix(in srgb, #ef4444 38%, var(--border-color))';
+                    } else if (due.days <= 5) {
+                        card.style.backgroundColor = 'color-mix(in srgb, #eab308 14%, var(--bg-card-sub))';
+                        card.style.borderColor = 'color-mix(in srgb, #eab308 34%, var(--border-color))';
+                    }
+                }
                 const dueText = due.days === null ? 'No deadline' : due.label;
                 let actions = '';
                 if (item.workKind === 'task') actions = `<button type="button" onclick="openTaskModal('${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold hover:border-indigo-500"><i class="fa-solid fa-pen mr-1"></i>Edit</button><button type="button" onclick="completeTask('${escapeAttr(item.id)}')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold"><i class="fa-solid fa-check mr-1"></i>Done</button><button type="button" onclick="deleteTask('${escapeAttr(item.id)}')" aria-label="Delete task" class="px-3 py-2 rounded-xl border themed-card text-xs opacity-70 hover:opacity-100"><i class="fa-solid fa-trash"></i></button>`;
