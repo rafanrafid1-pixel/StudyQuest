@@ -128,6 +128,7 @@
     if (!url) return;
     const host = hostOf(url);
     if (!$('resource-name').value.trim()) $('resource-name').value = host.split('.')[0].replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+    if (!$('resource-description').value.trim()) $('resource-description').value = 'Online learning resource hosted at ' + host + '. Edit this to describe what you use it for.';
     if (!$('resource-logo').value.trim()) setPreview(faviconFor(url));
   }
   function init() {
