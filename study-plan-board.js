@@ -27,10 +27,10 @@
       #sq-task-drawer.is-open{transform:translateX(0)}
       #sq-drawer-backdrop{position:fixed;inset:0;background:#020817aa;z-index:9998;opacity:0;pointer-events:none;transition:opacity .2s}
       #sq-drawer-backdrop.is-open{opacity:1;pointer-events:auto}
-      #${BOARD_ID} .sq-pool-task{border:1px solid #294b7c;border-radius:12px;padding:12px;margin-top:9px;background:#0c2040;cursor:grab}
-      #${BOARD_ID} .sq-pool-task:hover{border-color:#8b8cff}
-      #${BOARD_ID} .sq-plan-btn{border:1px solid #345b8d;border-radius:10px;background:#10264a;color:#eaf1ff;padding:9px 12px;font-size:12px;font-weight:800}
-      #${BOARD_ID} .sq-plan-btn-primary{background:linear-gradient(100deg,#4338ca,#6d45d9);border-color:#7771ff;color:white}
+      #sq-task-drawer .sq-pool-task{border:1px solid #294b7c;border-radius:12px;padding:12px;margin-top:9px;background:#0c2040;cursor:grab}
+      #sq-task-drawer .sq-pool-task:hover{border-color:#8b8cff}
+      #sq-task-drawer .sq-plan-btn{border:1px solid #345b8d;border-radius:10px;background:#10264a;color:#eaf1ff;padding:9px 12px;font-size:12px;font-weight:800}
+      #sq-task-drawer .sq-plan-btn-primary{background:linear-gradient(100deg,#4338ca,#6d45d9);border-color:#7771ff;color:white}
       #${BOARD_ID} .sq-day-column button{background:#0b2040;color:#dbeafe;border-color:#284d7b}
       @media(max-width:700px){#${BOARD_ID} .sq-week-grid{grid-template-columns:repeat(7,minmax(170px,1fr))}}
     `;
@@ -101,7 +101,7 @@
 
   function toggleDrawer(open){drawerOpen=open;document.getElementById('sq-task-drawer')?.classList.toggle('is-open',open);document.getElementById('sq-drawer-backdrop')?.classList.toggle('is-open',open);document.body.classList.toggle('sq-task-drawer-open',open);if(open)renderTaskLibrary()}
   function getTaskColor(taskId){const t=(STATE.tasks||[]).find(x=>String(x.id)===String(taskId));return t?.color||'#6366f1'}
-  function renderTaskLibrary(){const b=board();if(!b||typeof STATE==='undefined')return;const list=document.getElementById('sq-task-library'),empty=document.getElementById('sq-task-library-empty'),count=document.getElementById('sq-task-count');if(!list)return;const q=(document.getElementById('sq-task-search')?.value||'').trim().toLowerCase();const tasks=(STATE.tasks||[]).filter(t=>!t.completed&&t.status!=='completed'&&String(t.type||'').toLowerCase()!=='milestone'&&t.workKind!=='milestone'&&`${t.title||''} ${t.subject||''} ${t.type||''} ${t.notes||''}`.toLowerCase().includes(q));if(count)count.textContent='('+tasks.length+')';list.innerHTML=tasks.map(t=>'<div class="sq-pool-task" draggable="true" data-sq-task-id="'+esc(t.id)+'" style="border-left:4px solid '+esc(t.color||'#6366f1')+';background:color-mix(in srgb,'+esc(t.color||'#6366f1')+' 18%,#0c2040)"><div class="font-extrabold text-sm">'+esc(t.title)+'</div><div class="sq-small mt-1">'+esc(t.subject||'Other')+' · '+esc(t.type||'Task')+'</div><div class="sq-small mt-1">'+(t.deadline?'Due '+esc(t.deadline):'No deadline')+' · '+esc(t.time||t.estimatedTime||'30m')+'</div></div>').join('');if(empty)empty.style.display=tasks.length?'none':'block';}
+  function renderTaskLibrary(){const b=getBoard();if(!b||typeof STATE==='undefined')return;const list=document.getElementById('sq-task-library'),empty=document.getElementById('sq-task-library-empty'),count=document.getElementById('sq-task-count');if(!list)return;const q=(document.getElementById('sq-task-search')?.value||'').trim().toLowerCase();const tasks=(STATE.tasks||[]).filter(t=>!t.completed&&t.status!=='completed'&&String(t.type||'').toLowerCase()!=='milestone'&&t.workKind!=='milestone'&&`${t.title||''} ${t.subject||''} ${t.type||''} ${t.notes||''}`.toLowerCase().includes(q));if(count)count.textContent='('+tasks.length+')';list.innerHTML=tasks.map(t=>'<div class="sq-pool-task" draggable="true" data-sq-task-id="'+esc(t.id)+'" style="border-left:4px solid '+esc(t.color||'#6366f1')+';background:color-mix(in srgb,'+esc(t.color||'#6366f1')+' 18%,#0c2040)"><div class="font-extrabold text-sm">'+esc(t.title)+'</div><div class="sq-small mt-1">'+esc(t.subject||'Other')+' · '+esc(t.type||'Task')+'</div><div class="sq-small mt-1">'+(t.deadline?'Due '+esc(t.deadline):'No deadline')+' · '+esc(t.time||t.estimatedTime||'30m')+'</div></div>').join('');if(empty)empty.style.display=tasks.length?'none':'block';}
   function tagSuggestionSources(){
     document.querySelectorAll('#schedule-suggestions-list > div').forEach(row=>{
       const btn=row.querySelector('button[onclick*="acceptSuggestion"]');
