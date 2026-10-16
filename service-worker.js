@@ -1,6 +1,6 @@
 const CACHE_NAME = 'studyquest-v110-online-resources-portal';
 const CACHE_PREFIX = 'studyquest-';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
+const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg', './online-resources.js'];
 
 self.addEventListener('install', event => {
   // Activate new versions automatically; the page persists app data locally before this can reload.
