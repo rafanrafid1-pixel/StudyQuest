@@ -1134,6 +1134,7 @@
           <div class="flex items-center gap-3"><div id="resource-preview" class="w-14 h-14 rounded-xl themed-card-sub border flex items-center justify-center shrink-0"><i class="fa-solid fa-globe text-xl"></i></div><div class="flex-1"><label for="resource-url" class="block text-xs font-extrabold mb-1">Website URL</label><input id="resource-url" type="url" required placeholder="https://school-platform.example" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><p class="text-[10px] opacity-60 mt-1">We use the website address to suggest a name and load its favicon/logo when available.</p></div></div>
           <div><label for="resource-name" class="block text-xs font-extrabold mb-1">Website name</label><input id="resource-name" required maxlength="100" placeholder="e.g. My school portal" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"></div>
           <div><label for="resource-description" class="block text-xs font-extrabold mb-1">Short description</label><textarea id="resource-description" rows="2" maxlength="300" placeholder="What do you use this website for?" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"></textarea></div>
+          <div><label for="resource-account-email" class="block text-xs font-extrabold mb-1">Google account email (optional)</label><input id="resource-account-email" type="email" maxlength="254" placeholder="you@gmail.com" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><p class="text-[10px] opacity-60 mt-1">For Google links, this asks Google to open the selected account. Leave blank to use your browser's default.</p></div>
           <div><label for="resource-logo" class="block text-xs font-extrabold mb-1">Logo URL (optional)</label><input id="resource-logo" type="url" placeholder="Leave blank to use the site's favicon" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><p class="text-[10px] opacity-60 mt-1">Automatic logo lookup may not work for every website; you can provide a direct image URL instead.</p></div>
           <div class="flex justify-between gap-2 pt-2 border-t themed-card-sub"><button id="resource-delete" type="button" class="hidden px-3 py-2 rounded-xl border border-red-500/40 text-red-400 text-xs font-bold">Delete resource</button><div class="flex gap-2 ml-auto"><button type="button" id="resource-cancel-secondary" onclick="document.getElementById('resource-cancel').click()" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold">Cancel</button><button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">Save resource</button></div></div>
         </form>
@@ -1179,6 +1180,7 @@
                 <div class="p-3 themed-card-sub rounded-2xl border space-y-3">
                     <div><label for="input-resource-id" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Online resource (optional)</label><select id="input-resource-id" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><option value="">No resource linked</option></select><p class="text-[10px] opacity-60 mt-1">Link this task to a website in your Online Resources portal.</p></div>
                     <div><label for="input-assignment-url" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Exact homework link (optional)</label><input id="input-assignment-url" type="url" placeholder="https://.../specific-assignment" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-60 mt-1">When provided, this opens the specific assignment rather than the resource homepage.</p></div>
+                    <div><label for="input-google-account-email" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Google account for this homework (optional)</label><input id="input-google-account-email" type="email" maxlength="254" placeholder="Use resource default or browser default" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-60 mt-1">Overrides the resource's account for this task. Works with Google links; it cannot sign you in or grant access by itself.</p></div>
                     <button type="button" onclick="document.getElementById('resource-add').click()" class="text-xs font-bold text-indigo-400 hover:text-indigo-300"><i class="fa-solid fa-plus mr-1"></i>Add a resource without leaving this task</button>
                 </div>
 
@@ -1357,6 +1359,7 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
                     document.getElementById('input-notes').value = t.notes || '';
                     document.getElementById('input-resource-id').value = t.resourceId || '';
                     document.getElementById('input-assignment-url').value = t.assignmentUrl || '';
+                    document.getElementById('input-google-account-email').value = t.googleAccountEmail || '';
                     document.getElementById('input-color').value = t.color || '#6366f1';
                     document.getElementById('input-urgency').value = t.x;
                     document.getElementById('input-importance').value = t.y;
@@ -1381,6 +1384,7 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
                 document.getElementById('input-notes').value = '';
                 document.getElementById('input-resource-id').value = '';
                 document.getElementById('input-assignment-url').value = '';
+                document.getElementById('input-google-account-email').value = '';
                 setTimeEstimate('1h');
                 document.getElementById('input-due-days').value = '';
                 document.getElementById('input-repeat-enabled').checked = false;
@@ -1576,6 +1580,8 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
             const assignmentUrlRaw = document.getElementById('input-assignment-url').value.trim();
             let assignmentUrl = '';
             if (assignmentUrlRaw) { try { const parsedAssignmentUrl = new URL(assignmentUrlRaw); if (!['https:', 'http:'].includes(parsedAssignmentUrl.protocol)) throw new Error(); assignmentUrl = parsedAssignmentUrl.href; } catch (_) { alert('Enter a valid homework link beginning with https:// or http://.'); return; } }
+            const googleAccountEmail = document.getElementById('input-google-account-email').value.trim();
+            if (googleAccountEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(googleAccountEmail)) { alert('Enter a valid Google account email address.'); return; }
             const color = document.getElementById('input-color').value;
             const x = parseInt(document.getElementById('input-urgency').value);
             const y = parseInt(document.getElementById('input-importance').value);
@@ -1592,7 +1598,7 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
             pushUndo(existingIndex > -1 ? 'Edit task' : 'Create task');
             const previous = existingIndex > -1 ? STATE.tasks[existingIndex] : null;
             const recurrence = repeatEnabled ? { enabled:true, intervalWeeks:repeatWeeks, seriesId:previous?.recurrence?.seriesId || id, startDate:previous?.recurrence?.startDate || repeatStart, occurrenceNumber:Math.max(1, Number(previous?.recurrence?.occurrenceNumber) || 1) } : null;
-            const taskData = { ...(previous || {}), id, title, type, subject, notes, resourceId, assignmentUrl, color, x, y, time, difficulty, deadline, recurrence, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+            const taskData = { ...(previous || {}), id, title, type, subject, notes, resourceId, assignmentUrl, googleAccountEmail, color, x, y, time, difficulty, deadline, recurrence, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
 
             if (existingIndex > -1) STATE.tasks[existingIndex] = taskData;
             else STATE.tasks.push(taskData);
