@@ -85,7 +85,7 @@
     const duplicate = getResources().find(r => r.id !== id && hostOf(r.url) === hostOf(url));
     if (duplicate && !confirm('You already have a resource for this website (' + duplicate.name + '). Save another entry anyway?')) return;
     const accountEmail = $('resource-account-email').value.trim();
-    if (accountEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(accountEmail)) { alert('Enter a valid Google account email address.'); return; }
+    if (accountEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail)) { alert('Enter a valid Google account email address.'); return; }
     const data = { ...(old || {}), id, name, url, description: $('resource-description').value.trim(), accountEmail, logo: safeUrl($('resource-logo').value) || (old?.logo || faviconFor(url)), updatedAt: new Date().toISOString() };
     if (old) Object.assign(old, data); else getResources().push(data);
     if (typeof window.saveLocalStorage === 'function') window.saveLocalStorage();
