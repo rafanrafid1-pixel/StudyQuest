@@ -3,8 +3,14 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const safeUrl = value => {
-    try { const u = new URL(String(value || '').trim()); return ['https:','http:'].includes(u.protocol) ? u.href : ''; }
-    catch (_) { return ''; }
+    try {
+      let raw = String(value || '').trim();
+      if (!raw) return '';
+      // School VLEs often provide a bare domain or a school-specific path without a protocol.
+      if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = 'https://' + raw;
+      const u = new URL(raw);
+      return ['https:','http:'].includes(u.protocol) && u.hostname.includes('.') ? u.href : '';
+    } catch (_) { return ''; }
   };
   const hostOf = value => { try { return new URL(value).hostname.replace(/^www\./,''); } catch (_) { return ''; } };
   const escapeText = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
