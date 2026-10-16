@@ -12,6 +12,17 @@
     if (!Array.isArray(STATE.resources)) STATE.resources = [];
     return STATE.resources;
   };
+  const withGoogleAccount = (value, email) => {
+    const url = safeUrl(value);
+    const account = String(email || '').trim();
+    if (!url || !account) return url;
+    try {
+      const parsed = new URL(url);
+      const host = parsed.hostname.toLowerCase();
+      if (host === 'google.com' || host.endsWith('.google.com') || host === 'google.co.uk' || host.endsWith('.google.co.uk')) parsed.searchParams.set('authuser', account);
+      return parsed.href;
+    } catch (_) { return url; }
+  };
   const faviconFor = url => {
     const host = hostOf(url);
     return host ? 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(host) + '&sz=128' : '';
@@ -21,6 +32,7 @@
     $('resource-name').value = '';
     $('resource-url').value = '';
     $('resource-description').value = '';
+    $('resource-account-email').value = '';
     $('resource-logo').value = '';
     $('resource-modal-title').textContent = 'Add online resource';
     $('resource-delete').classList.add('hidden');
@@ -40,6 +52,7 @@
     $('resource-name').value = item.name || '';
     $('resource-url').value = item.url || '';
     $('resource-description').value = item.description || '';
+    $('resource-account-email').value = item.accountEmail || '';
     $('resource-logo').value = item.logo || '';
     $('resource-modal-title').textContent = 'Edit online resource';
     $('resource-delete').classList.remove('hidden');
@@ -65,7 +78,9 @@
     const name = $('resource-name').value.trim() || hostOf(url) || 'Online resource';
     const duplicate = getResources().find(r => r.id !== id && hostOf(r.url) === hostOf(url));
     if (duplicate && !confirm('You already have a resource for this website (' + duplicate.name + '). Save another entry anyway?')) return;
-    const data = { ...(old || {}), id, name, url, description: $('resource-description').value.trim(), logo: safeUrl($('resource-logo').value) || (old?.logo || faviconFor(url)), updatedAt: new Date().toISOString() };
+    const accountEmail = $('resource-account-email').value.trim();
+    if (accountEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(accountEmail)) { alert('Enter a valid Google account email address.'); return; }
+    const data = { ...(old || {}), id, name, url, description: $('resource-description').value.trim(), accountEmail, logo: safeUrl($('resource-logo').value) || (old?.logo || faviconFor(url)), updatedAt: new Date().toISOString() };
     if (old) Object.assign(old, data); else getResources().push(data);
     if (typeof window.saveLocalStorage === 'function') window.saveLocalStorage();
     render();
@@ -84,7 +99,7 @@
     const root = $('resources-list');
     if (!root) return;
     const query = ($('resources-search')?.value || '').trim().toLowerCase();
-    const items = getResources().filter(r => !query || [r.name,r.url,r.description].join(' ').toLowerCase().includes(query));
+    const items = getResources().filter(r => !query || [r.name,r.url,r.description,r.accountEmail].join(' ').toLowerCase().includes(query));
     $('resources-count').textContent = getResources().length + ' resource' + (getResources().length === 1 ? '' : 's');
     root.innerHTML = '';
     $('resources-empty').classList.toggle('hidden', items.length > 0);
@@ -99,11 +114,11 @@
           <div class="min-w-0 flex-1"><h3 class="font-extrabold break-words">${escapeText(item.name)}</h3><p class="text-xs opacity-60 break-all mt-1">${escapeText(hostOf(item.url))}</p><p class="text-sm opacity-75 mt-2 whitespace-pre-wrap break-words">${escapeText(item.description || 'No description added yet.')}</p></div>
         </div>
         <div class="flex flex-wrap gap-2">
-          <a href="${escapeText(item.url)}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Open website</a>
+          <a href="${escapeText(withGoogleAccount(item.url, item.accountEmail))}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Open website</a>
           <button type="button" data-edit="${escapeText(item.id)}" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
         </div>
         <div class="border-t themed-card-sub pt-3"><p class="text-xs font-extrabold mb-2"><i class="fa-solid fa-link mr-1"></i>Linked homework <span class="opacity-60">(${linked.length})</span></p>
-        ${linked.length ? '<div class="space-y-2">' + linked.map(t => '<div class="flex flex-wrap items-center justify-between gap-2 text-xs"><span class="min-w-0 break-words">' + escapeText(t.title) + '</span>' + (safeUrl(t.assignmentUrl) ? '<a class="text-indigo-400 font-bold" href="' + escapeText(safeUrl(t.assignmentUrl)) + '" target="_blank" rel="noopener noreferrer">Open assignment <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>' : '<span class="opacity-50">No assignment-specific link</span>') + '</div>').join('') + '</div>' : '<p class="text-xs opacity-55">Link this resource when creating or editing homework.</p>'}
+        ${linked.length ? '<div class="space-y-2">' + linked.map(t => '<div class="flex flex-wrap items-center justify-between gap-2 text-xs"><span class="min-w-0 break-words">' + escapeText(t.title) + '</span>' + (safeUrl(t.assignmentUrl) ? '<a class="text-indigo-400 font-bold" href="' + escapeText(withGoogleAccount(t.assignmentUrl, t.googleAccountEmail || item.accountEmail)) + '" target="_blank" rel="noopener noreferrer">Open assignment <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>' : '<span class="opacity-50">No assignment-specific link</span>') + '</div>').join('') + '</div>' : '<p class="text-xs opacity-55">Link this resource when creating or editing homework.</p>'}
         </div>`;
       const box = card.querySelector('[data-logo-box]');
       if (logo) { const img = document.createElement('img'); img.src = logo; img.alt = ''; img.className = 'w-10 h-10 object-contain'; img.onerror = () => { img.remove(); }; box.replaceChildren(img); }
