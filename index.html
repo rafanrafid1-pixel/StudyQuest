@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyQuest V10.3.8 — Timed Weekly Planner</title>
+    <title>StudyQuest V11.0 — Online Resources Portal</title>
     <meta name="theme-color" content="#111827">
     <meta name="description" content="StudyQuest — your study planner across PC and mobile.">
     <link rel="manifest" href="manifest.webmanifest">
@@ -404,6 +404,7 @@
         <button type="button" onclick="switchTab('graph')" data-sq-tab="graph"><i class="fa-solid fa-chart-line"></i> Task matrix</button>
         <button type="button" onclick="switchTab('plan')" data-sq-tab="plan"><i class="fa-solid fa-calendar-week"></i> Study plan</button>
         <button type="button" onclick="switchTab('revision')" data-sq-tab="revision"><i class="fa-solid fa-book-open"></i> Revision</button>
+        <button type="button" onclick="switchTab('resources')" data-sq-tab="resources"><i class="fa-solid fa-globe"></i> Online Resources</button>
         <p class="sq-side-label">TRACKING</p>
         <button type="button" onclick="switchTab('projects')" data-sq-tab="projects"><i class="fa-solid fa-folder-open"></i> Projects</button>
         <button type="button" onclick="switchTab('stats')" data-sq-tab="stats"><i class="fa-solid fa-chart-column"></i> Analytics</button>
@@ -421,6 +422,7 @@
         <button type="button" class="mobile-nav-btn" data-mobile-tab="tasks" onclick="switchTab('tasks')"><i class="fa-solid fa-list-check"></i><span>Tasks</span></button>
         <button type="button" class="mobile-nav-btn" data-mobile-tab="revision" onclick="switchTab('revision')"><i class="fa-solid fa-book-open"></i><span>Revision</span></button>
         <button type="button" class="mobile-nav-btn" data-mobile-tab="xp" onclick="switchTab('xp')"><i class="fa-solid fa-trophy"></i><span>XP</span></button>
+        <button type="button" class="mobile-nav-btn" data-mobile-tab="resources" onclick="switchTab('resources')"><i class="fa-solid fa-globe"></i><span>Links</span></button>
     </nav>
 
         <!-- Main Content Body -->
@@ -1041,6 +1043,10 @@
                 </div>
                 <div class="space-y-4">
                     <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
+                        <h3 class="text-base font-black text-indigo-300">V11 — Online Resources Portal</h3>
+                        <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Added a dedicated portal for school websites, revision platforms and online homework resources.</li><li>Resources can be reused across multiple tasks, with optional assignment-specific links.</li><li>Added website-name suggestions, favicon/logo lookup, editable descriptions and resource search.</li><li>Kept existing StudyQuest areas and task workflows available.</li></ul>
+                    </article>
+                    <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
                         <h3 class="text-base font-black text-indigo-300">V10 — Proactive Planning</h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Added Today's Plan above the existing dashboard so today's scheduled work and current overview stay together.</li><li>Added an Auto-schedule homework action that builds sessions using the existing availability and deadline planner, then adds non-conflicting sessions automatically.</li><li>Added editable session dates and times with overlap checks, undo support and saved changes.</li><li>Kept reminders off by default; no new streak or XP mechanics were added.</li></ul>
                         <div class="ml-2 sm:ml-4 space-y-2">
@@ -1105,7 +1111,34 @@
             </div>
         </div>
 
+        <div id="tab-resources" class="hidden space-y-6">
+      <section class="themed-card border rounded-2xl p-5 sm:p-7 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div><p class="text-[10px] uppercase font-extrabold tracking-wider opacity-60 mb-1">V11 · Your school websites</p><h2 class="text-2xl font-black"><i class="fa-solid fa-globe text-indigo-400 mr-2"></i>Online Resources</h2><p class="text-sm opacity-70 mt-1">A personal portal for homework websites, revision platforms and school links. Connect one resource to as many tasks as you need.</p></div>
+          <button id="resource-add" type="button" class="shrink-0 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold"><i class="fa-solid fa-plus mr-1"></i>Add resource</button>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 sm:items-center"><input id="resources-search" type="search" placeholder="Search resources..." class="w-full sm:max-w-sm px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><p id="resources-count" class="text-xs opacity-60">0 resources</p></div>
+        <div id="resources-list" class="grid grid-cols-1 lg:grid-cols-2 gap-3"></div>
+        <div id="resources-empty" class="hidden text-center py-12 px-4 themed-card-sub border border-dashed rounded-2xl"><i class="fa-solid fa-link text-3xl opacity-40"></i><h3 class="font-extrabold mt-3">Your resource portal is empty</h3><p class="text-sm opacity-65 mt-1">Add a school website or online homework platform to get started.</p><button type="button" onclick="document.getElementById('resource-add').click()" class="mt-4 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">Add your first resource</button></div>
+      </section>
+    </div>
+
     </main>
+
+    <!-- RESOURCE EDIT MODAL -->
+    <div id="resource-modal" class="fixed inset-0 z-[60] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="themed-card border w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between gap-3"><h3 id="resource-modal-title" class="text-lg font-black">Add online resource</h3><button type="button" id="resource-cancel" aria-label="Close resource editor" class="text-lg opacity-70"><i class="fa-solid fa-xmark"></i></button></div>
+        <form id="resource-form" class="space-y-4">
+          <input id="resource-id" type="hidden">
+          <div class="flex items-center gap-3"><div id="resource-preview" class="w-14 h-14 rounded-xl themed-card-sub border flex items-center justify-center shrink-0"><i class="fa-solid fa-globe text-xl"></i></div><div class="flex-1"><label for="resource-url" class="block text-xs font-extrabold mb-1">Website URL</label><input id="resource-url" type="url" required placeholder="https://school-platform.example" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><p class="text-[10px] opacity-60 mt-1">We use the website address to suggest a name and load its favicon/logo when available.</p></div></div>
+          <div><label for="resource-name" class="block text-xs font-extrabold mb-1">Website name</label><input id="resource-name" required maxlength="100" placeholder="e.g. My school portal" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"></div>
+          <div><label for="resource-description" class="block text-xs font-extrabold mb-1">Short description</label><textarea id="resource-description" rows="2" maxlength="300" placeholder="What do you use this website for?" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"></textarea></div>
+          <div><label for="resource-logo" class="block text-xs font-extrabold mb-1">Logo URL (optional)</label><input id="resource-logo" type="url" placeholder="Leave blank to use the site's favicon" class="w-full px-3 py-2.5 rounded-xl themed-card-sub border text-xs"><p class="text-[10px] opacity-60 mt-1">Automatic logo lookup may not work for every website; you can provide a direct image URL instead.</p></div>
+          <div class="flex justify-between gap-2 pt-2 border-t themed-card-sub"><button id="resource-delete" type="button" class="hidden px-3 py-2 rounded-xl border border-red-500/40 text-red-400 text-xs font-bold">Delete resource</button><div class="flex gap-2 ml-auto"><button type="button" id="resource-cancel-secondary" onclick="document.getElementById('resource-cancel').click()" class="px-3 py-2 rounded-xl border themed-card text-xs font-bold">Cancel</button><button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">Save resource</button></div></div>
+        </form>
+      </div>
+    </div>
 
     <!-- TASK CREATION / EDIT MODAL -->
     <div id="task-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
@@ -1141,6 +1174,12 @@
                 <div>
                     <label class="block text-xs font-extrabold uppercase tracking-wider mb-1">Topic / Notes (optional)</label>
                     <textarea id="input-notes" rows="2" placeholder="e.g. Algebra: practise rearranging formulae, then check mistakes" class="w-full px-3.5 py-2.5 rounded-xl themed-card-sub border text-xs focus:outline-none focus:border-indigo-500 resize-y"></textarea>
+                </div>
+
+                <div class="p-3 themed-card-sub rounded-2xl border space-y-3">
+                    <div><label for="input-resource-id" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Online resource (optional)</label><select id="input-resource-id" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><option value="">No resource linked</option></select><p class="text-[10px] opacity-60 mt-1">Link this task to a website in your Online Resources portal.</p></div>
+                    <div><label for="input-assignment-url" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Exact homework link (optional)</label><input id="input-assignment-url" type="url" placeholder="https://.../specific-assignment" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-60 mt-1">When provided, this opens the specific assignment rather than the resource homepage.</p></div>
+                    <button type="button" onclick="switchTab('resources')" class="text-xs font-bold text-indigo-400 hover:text-indigo-300"><i class="fa-solid fa-plus mr-1"></i>Manage online resources</button>
                 </div>
 
                 <!-- Color Selector -->
@@ -1205,7 +1244,7 @@
     <script>
         // Application State Container
         const STATE = {
-            schemaVersion: 6, tasks: [], revisionTopics: [], completedTasks: [], projects: [], plannedSessions: [], scheduleSuggestions: [], activityLog: [],
+            schemaVersion: 7, tasks: [], revisionTopics: [], completedTasks: [], projects: [], plannedSessions: [], scheduleSuggestions: [], activityLog: [], resources: [],
             availability: null, preferences: { lastTab: 'dashboard' }, xp: 0, level: 1, streak: 1, soundEnabled: true, theme: 'theme-slate', recommendedX: null
         };
         const UNDO_STACK = [];
@@ -1236,7 +1275,7 @@
 
         // Tab Navigation Switcher
         function switchTab(tabId) {
-            const tabIds = ['dashboard', 'graph', 'tasks', 'revision', 'plan', 'projects', 'stats', 'xp', 'guide', 'settings'];
+            const tabIds = ['dashboard', 'graph', 'tasks', 'revision', 'plan', 'projects', 'stats', 'xp', 'guide', 'settings', 'resources'];
             tabIds.forEach(id => {
                 const el = document.getElementById(`tab-${id}`);
                 const btn = document.getElementById(`nav-${id}-btn`);
@@ -1270,12 +1309,14 @@
             STATE.preferences.lastTab = tabId;
             if (tabId === 'xp') renderXPPage();
             if (tabId === 'tasks') renderAllTasks();
+            if (tabId === 'resources' && typeof window.sqRenderResources === 'function') window.sqRenderResources();
             if (tabId === 'revision') renderRevisionTopics();
             if (tabId === 'dashboard') renderDashboard();
             if (tabId === 'plan') renderStudyPlan();
             if (tabId === 'projects') renderProjects();
             if (tabId === 'stats') renderStatistics();
             if (tabId === 'settings') switchSettingsPanel('general');
+            if (tabId === 'resources' && typeof window.sqRenderResources === 'function') window.sqRenderResources();
         }
 
         function switchSettingsPanel(panel) {
@@ -1313,6 +1354,8 @@
                     document.getElementById('input-type').value = t.type || 'Homework';
                     document.getElementById('input-subject').value = t.subject || 'Other';
                     document.getElementById('input-notes').value = t.notes || '';
+                    document.getElementById('input-resource-id').value = t.resourceId || '';
+                    document.getElementById('input-assignment-url').value = t.assignmentUrl || '';
                     document.getElementById('input-color').value = t.color || '#6366f1';
                     document.getElementById('input-urgency').value = t.x;
                     document.getElementById('input-importance').value = t.y;
@@ -1335,6 +1378,8 @@
                 document.getElementById('input-type').value = 'Homework';
                 document.getElementById('input-subject').value = 'Maths';
                 document.getElementById('input-notes').value = '';
+                document.getElementById('input-resource-id').value = '';
+                document.getElementById('input-assignment-url').value = '';
                 setTimeEstimate('1h');
                 document.getElementById('input-due-days').value = '';
                 document.getElementById('input-repeat-enabled').checked = false;
@@ -1526,6 +1571,10 @@
             const type = document.getElementById('input-type').value;
             const subject = document.getElementById('input-subject').value;
             const notes = document.getElementById('input-notes').value.trim();
+            const resourceId = document.getElementById('input-resource-id').value;
+            const assignmentUrlRaw = document.getElementById('input-assignment-url').value.trim();
+            let assignmentUrl = '';
+            if (assignmentUrlRaw) { try { const parsedAssignmentUrl = new URL(assignmentUrlRaw); if (!['https:', 'http:'].includes(parsedAssignmentUrl.protocol)) throw new Error(); assignmentUrl = parsedAssignmentUrl.href; } catch (_) { alert('Enter a valid homework link beginning with https:// or http://.'); return; } }
             const color = document.getElementById('input-color').value;
             const x = parseInt(document.getElementById('input-urgency').value);
             const y = parseInt(document.getElementById('input-importance').value);
@@ -1542,7 +1591,7 @@
             pushUndo(existingIndex > -1 ? 'Edit task' : 'Create task');
             const previous = existingIndex > -1 ? STATE.tasks[existingIndex] : null;
             const recurrence = repeatEnabled ? { enabled:true, intervalWeeks:repeatWeeks, seriesId:previous?.recurrence?.seriesId || id, startDate:previous?.recurrence?.startDate || repeatStart, occurrenceNumber:Math.max(1, Number(previous?.recurrence?.occurrenceNumber) || 1) } : null;
-            const taskData = { ...(previous || {}), id, title, type, subject, notes, color, x, y, time, difficulty, deadline, recurrence, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+            const taskData = { ...(previous || {}), id, title, type, subject, notes, resourceId, assignmentUrl, color, x, y, time, difficulty, deadline, recurrence, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
 
             if (existingIndex > -1) STATE.tasks[existingIndex] = taskData;
             else STATE.tasks.push(taskData);
@@ -2293,9 +2342,10 @@
             const status = document.getElementById('backup-status'); if (status) status.textContent = 'v7 backup exported with tasks, topics, projects, schedules, activity history and settings.';
         }
         function normalizeState(parsed) {
-            const base = { schemaVersion:7, tasks:[], revisionTopics:[], completedTasks:[], projects:[], plannedSessions:[], scheduleSuggestions:[], activityLog:[], availability:defaultAvailability(), preferences:{lastTab:'dashboard'}, xp:0, level:1, streak:1, soundEnabled:true, theme:'theme-slate' };
+            const base = { schemaVersion:7, tasks:[], revisionTopics:[], completedTasks:[], projects:[], plannedSessions:[], scheduleSuggestions:[], activityLog:[], resources:[], availability:defaultAvailability(), preferences:{lastTab:'dashboard'}, xp:0, level:1, streak:1, soundEnabled:true, theme:'theme-slate' };
             const out = { ...base, ...parsed }; out.schemaVersion=7;
             out.tasks=Array.isArray(parsed.tasks)?parsed.tasks.map(t=>({type:'Homework',subject:'Other',notes:'',color:'#6366f1',x:50,y:50,time:'1h',...t,createdAt:t.createdAt||null,updatedAt:t.updatedAt||null})):[];
+            out.resources=Array.isArray(parsed.resources)?parsed.resources.map(r=>({...r})):[];
             out.revisionTopics=Array.isArray(parsed.revisionTopics)?parsed.revisionTopics.map(t=>({confidence:3,revisionHistory:[],confidenceHistory:[],examDate:'',...t,revisionHistory:Array.isArray(t.revisionHistory)?t.revisionHistory:[],confidenceHistory:Array.isArray(t.confidenceHistory)?t.confidenceHistory:[]})):[];
             out.completedTasks=Array.isArray(parsed.completedTasks)?parsed.completedTasks:[];
             out.projects=Array.isArray(parsed.projects)?parsed.projects.map(p=>({...p,milestones:Array.isArray(p.milestones)?p.milestones:[]})):[];
@@ -2543,5 +2593,6 @@
 </script>
 
 <script src="./study-plan-board.js"></script>
+<script src="./online-resources.js"></script>
 </body>
 </html>
