@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v1035-task-colours';
+const CACHE_NAME = 'studyquest-v1036-task-drawer-fix';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg'];
 
