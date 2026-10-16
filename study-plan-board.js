@@ -12,13 +12,17 @@
     style.textContent = `
       #${BOARD_ID}{color:#eaf1ff;background:linear-gradient(145deg,#071329,#0a1b38 58%,#071226)!important;border:1px solid #1b3d68!important;border-radius:22px!important;padding:22px!important;box-shadow:0 22px 60px #0004!important}
       #${BOARD_ID} .sq-week-grid{display:grid;grid-template-columns:repeat(7,minmax(145px,1fr));gap:0;overflow-x:auto;border:1px solid #17365e;border-radius:14px;background:#06142b;padding-bottom:0}
-      #${BOARD_ID} .sq-day-column{min-height:520px;border:0;border-left:1px solid #17365e;border-radius:0;background:repeating-linear-gradient(to bottom,transparent 0,transparent 55px,#163153 56px);padding:10px 7px;transition:background .15s;min-width:0}
-      #${BOARD_ID} .sq-day-column.sq-drop-ready{outline:2px dashed #818cf8;outline-offset:-3px;background-color:#122650}
-      #${BOARD_ID} .sq-day-column.sq-today{background-color:#0d2046;box-shadow:inset 0 3px #6868ff}
-      #${BOARD_ID} .sq-day-column>div:first-child{padding:5px 3px 12px;border-bottom:1px solid #1b3a63;margin-bottom:8px}
-      #${BOARD_ID} .sq-session-card{cursor:grab;border:1px solid var(--task-color,#2b6f88);border-left:4px solid var(--task-color,#2dd4bf);border-radius:9px;padding:9px;margin-top:8px;background:color-mix(in srgb,var(--task-color,#2dd4bf) 24%,#081832);box-shadow:0 5px 15px #0002;overflow-wrap:anywhere}
+      #${BOARD_ID} .sq-day-column{border:0;border-left:1px solid #17365e;border-radius:0;background:#06142b;padding:0;min-width:0}
+      #${BOARD_ID} .sq-day-column.sq-today{background:#0b1d3a}
+      #${BOARD_ID} .sq-day-heading{height:54px;padding:8px 5px;border-bottom:1px solid #1b3a63;position:sticky;top:0;background:#081832;z-index:3}
+      #${BOARD_ID} .sq-day-timeline{height:640px;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 39px,#163153 40px);background-size:100% 40px}
+      #${BOARD_ID} .sq-hour-label{position:absolute;left:3px;right:3px;border-top:1px solid #163153;height:40px;font-size:9px;color:#7190ba;padding-top:2px;pointer-events:none}
+      #${BOARD_ID} .sq-day-column.sq-drop-ready .sq-day-timeline{background-color:#122650}
+      #${BOARD_ID} .sq-session-card{position:absolute;left:3px;right:3px;z-index:2;min-height:24px;overflow:hidden;cursor:grab;border:1px solid var(--task-color,#2b6f88);border-left:4px solid var(--task-color,#2dd4bf);border-radius:7px;padding:4px;background:color-mix(in srgb,var(--task-color,#2dd4bf) 24%,#081832);box-shadow:0 3px 10px #0003;overflow-wrap:anywhere;font-size:10px}
       #${BOARD_ID} .sq-session-card:active{cursor:grabbing}
       #${BOARD_ID} .sq-session-card.sq-dragging{opacity:.4}
+      #${BOARD_ID} .sq-session-time{font-size:9px;color:#b5d1f7;margin-top:2px}
+      #${BOARD_ID} .sq-session-card button{font-size:9px;padding:2px 4px}
       #${BOARD_ID} .sq-session-time{font-size:10px;color:#b5d1f7;margin-top:5px}
       #${BOARD_ID} .sq-drop-hint{border:1px dashed #23456f;border-radius:9px;padding:16px 5px;text-align:center;font-size:10px;color:#9db8e7;margin-top:8px}
       #${BOARD_ID} .sq-board-note{font-size:12px;color:#9db8e7}
@@ -75,29 +79,36 @@
     section.addEventListener('drop', onDrop);
   }
 
+  const DAY_START_MINUTES=7*60;
+  const DAY_END_MINUTES=23*60;
+  const PIXELS_PER_HOUR=40;
   function renderBoard() {
     ensureBoard();
-    const board = getBoard();
-    if (!board || typeof STATE === 'undefined') return;
-    const grid = board.querySelector('#sq-week-grid');
-    if (!grid) return;
-    const start = typeof startOfToday === 'function' ? startOfToday() : new Date();
-    const days = Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d;});
-    grid.innerHTML = days.map(day=>{
-      const key=keyFor(day);
-      const sessions=(STATE.plannedSessions||[]).filter(s=>s.date===key && s.status!=='dismissed').sort((a,b)=>String(a.start).localeCompare(String(b.start)));
-      const today=key===keyFor(new Date());
-      const cards=sessions.map(s=>`<article class="sq-session-card" draggable="${s.status!=='completed'}" data-session-id="${esc(s.id)}" style="--task-color:${esc(s.color||getTaskColor(s.taskId))};${s.status==='completed'?'opacity:.6;':''}">
-        <div class="flex items-start gap-2"><i class="fa-solid fa-grip-vertical opacity-40 mt-1"></i><div class="min-w-0 flex-1"><div class="text-xs font-extrabold ${s.status==='completed'?'line-through':''}">${esc(s.title)}</div><div class="sq-session-time">${esc(s.start)}–${esc(s.end)} · ${Number(s.estimatedMinutes)||0} min</div><div class="text-[10px] opacity-55 mt-1">${esc(s.subject||'Other')}${s.status==='completed'?' · Completed':''}</div></div></div>
-        <div class="flex gap-1 mt-2"><button type="button" class="sq-edit-session themed-card-sub border rounded-md px-2 py-1 text-[10px]" data-id="${esc(s.id)}">Edit</button>${s.status==='planned'?'<button type="button" class="sq-remove-session themed-card-sub border rounded-md px-2 py-1 text-[10px]" data-id="'+esc(s.id)+'">Remove</button>':''}</div>
-      </article>`).join('');
-      return `<div class="sq-day-column ${today?'sq-today':''}" data-day="${key}" role="group" aria-label="Drop sessions on ${key}"><div class="flex items-center justify-between gap-1"><div><div class="text-xs font-black">${day.toLocaleDateString(undefined,{weekday:'short'})}</div><div class="text-[10px] opacity-60">${day.toLocaleDateString(undefined,{day:'numeric',month:'short'})}</div></div><span class="text-[10px] opacity-50">${sessions.length}</span></div>${cards||'<div class="sq-drop-hint">Drop a session here</div>'}</div>`;
+    const board=getBoard();
+    if(!board||typeof STATE==='undefined')return;
+    const grid=board.querySelector('#sq-week-grid');
+    if(!grid)return;
+    const today=typeof startOfToday==='function'?startOfToday():new Date();
+    const days=Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()+i);return d;});
+    grid.innerHTML=days.map(day=>{
+      const date=keyFor(day),sessions=(STATE.plannedSessions||[]).filter(s=>s.date===date&&s.status!=='dismissed').sort((x,y)=>String(x.start).localeCompare(String(y.start)));
+      const cards=sessions.map(s=>{
+        const top=Math.max(0,Math.min(640,(timeMinutes(s.start)-DAY_START_MINUTES)*PIXELS_PER_HOUR/60));
+        const height=Math.max(24,Math.min(640-top,(timeMinutes(s.end)-timeMinutes(s.start))*PIXELS_PER_HOUR/60));
+        return `<article class="sq-session-card" draggable="${s.status!=='completed'}" data-session-id="${esc(s.id)}" style="top:${top}px;height:${height}px;--task-color:${esc(s.color||getTaskColor(s.taskId))};${s.status==='completed'?'opacity:.6;':''}"><div class="font-extrabold">${esc(s.title)}</div><div class="sq-session-time">${esc(s.start)}–${esc(s.end)} · ${Number(s.estimatedMinutes)||timeMinutes(s.end)-timeMinutes(s.start)} min</div><div class="flex gap-1 mt-1"><button type="button" class="sq-edit-session themed-card-sub border rounded-md" data-id="${esc(s.id)}">Edit</button>${s.status==='planned'?'<button type="button" class="sq-remove-session themed-card-sub border rounded-md" data-id="'+esc(s.id)+'">×</button>':''}</div></article>`;
+      }).join('');
+      const labels=Array.from({length:16},(_,i)=>`<div class="sq-hour-label" style="top:${i*40}px">${String(i+7).padStart(2,'0')}:00</div>`).join('');
+      return `<div class="sq-day-column ${date===keyFor(new Date())?'sq-today':''}" data-day="${date}" role="group" aria-label="Schedule for ${date}"><div class="sq-day-heading"><div class="text-xs font-black">${day.toLocaleDateString(undefined,{weekday:'short'})}</div><div class="text-[10px] opacity-60">${day.toLocaleDateString(undefined,{day:'numeric',month:'short'})}</div></div><div class="sq-day-timeline" data-day="${date}" aria-label="Time slots from 07:00 to 23:00">${labels}${cards}</div></div>`;
     }).join('');
-    grid.querySelectorAll('.sq-edit-session').forEach(b=>b.addEventListener('click',()=>typeof editPlannedSession==='function'&&editPlannedSession(b.dataset.id)));
-    grid.querySelectorAll('.sq-remove-session').forEach(b=>b.addEventListener('click',()=>typeof removePlannedSession==='function'&&removePlannedSession(b.dataset.id)));
-    renderTaskLibrary();
-    tagSuggestionSources();
+    grid.querySelectorAll('.sq-edit-session').forEach(btn=>btn.addEventListener('click',()=>typeof editPlannedSession==='function'&&editPlannedSession(btn.dataset.id)));
+    grid.querySelectorAll('.sq-remove-session').forEach(btn=>btn.addEventListener('click',()=>typeof removePlannedSession==='function'&&removePlannedSession(btn.dataset.id)));
+    renderTaskLibrary();tagSuggestionSources();
   }
+  function dropMinute(event,timeline){
+    const rect=timeline.getBoundingClientRect(),y=Math.max(0,Math.min(rect.height,event.clientY-rect.top));
+    return Math.max(DAY_START_MINUTES,Math.min(DAY_END_MINUTES-15,Math.round((DAY_START_MINUTES+y*60/PIXELS_PER_HOUR)/15)*15));
+  }
+  function fmtMinute(n){return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
 
   function toggleDrawer(open){drawerOpen=open;document.getElementById('sq-task-drawer')?.classList.toggle('is-open',open);document.getElementById('sq-drawer-backdrop')?.classList.toggle('is-open',open);document.body.classList.toggle('sq-task-drawer-open',open);if(open)renderTaskLibrary()}
   function getTaskColor(taskId){const t=(STATE.tasks||[]).find(x=>String(x.id)===String(taskId));return t?.color||'#6366f1'}
@@ -131,17 +142,20 @@
   function onDragEnd(event) {
     event.target.closest('.sq-session-card')?.classList.remove('sq-dragging');
     getBoard()?.querySelectorAll('.sq-drop-ready').forEach(el=>el.classList.remove('sq-drop-ready'));
+    getBoard()?.querySelectorAll('.sq-drop-marker').forEach(el=>el.remove());
   }
   function onDragOver(event) {
-    const day=event.target.closest('[data-day]');
-    if (!day) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect='move';
-    day.classList.add('sq-drop-ready');
+    const timeline=event.target.closest('.sq-day-timeline');
+    if(!timeline)return;
+    event.preventDefault();event.dataTransfer.dropEffect='move';
+    timeline.closest('.sq-day-column')?.classList.add('sq-drop-ready');
+    let marker=timeline.querySelector('.sq-drop-marker');
+    if(!marker){marker=document.createElement('div');marker.className='sq-drop-marker';marker.style.cssText='position:absolute;left:0;right:0;height:2px;background:#a5b4fc;z-index:5;pointer-events:none';timeline.appendChild(marker);}
+    marker.style.top=((dropMinute(event,timeline)-DAY_START_MINUTES)*PIXELS_PER_HOUR/60)+'px';
   }
   function onDragLeave(event) {
-    const day=event.target.closest('[data-day]');
-    if (day && !day.contains(event.relatedTarget)) day.classList.remove('sq-drop-ready');
+    const day=event.target.closest('.sq-day-column');
+    if(day&&!day.contains(event.relatedTarget))day.classList.remove('sq-drop-ready');
   }
   function overlaps(date,start,end,exceptId) {
     return (STATE.plannedSessions||[]).some(s=>s.id!==exceptId&&s.status==='planned'&&s.date===date&&timeMinutes(s.start)<timeMinutes(end)&&timeMinutes(s.end)>timeMinutes(start));
@@ -163,37 +177,37 @@
     return null;
   }
   function onDrop(event) {
-    const day=event.target.closest('[data-day]');
-    if (!day) return;
-    event.preventDefault(); day.classList.remove('sq-drop-ready');
-    const payload=event.dataTransfer.getData('text/plain')||'';
-    const [type,id]=payload.split(':');
-    const date=day.dataset.day;
-    const status=getBoard()?.querySelector('#sq-board-status');
+    const timeline=event.target.closest('.sq-day-timeline');if(!timeline)return;
+    event.preventDefault();timeline.closest('.sq-day-column')?.classList.remove('sq-drop-ready');timeline.querySelector('.sq-drop-marker')?.remove();
+    const [type,id]=(event.dataTransfer.getData('text/plain')||'').split(':');
+    const date=timeline.dataset.day,requested=dropMinute(event,timeline),requestedText=fmtMinute(requested),status=getBoard()?.querySelector('#sq-board-status');
+    const avail=(STATE.availability||defaultAvailability())[dateFor(date).getDay()];
+    if(!avail?.enabled){if(status)status.textContent='Availability is disabled for this day. Enable it in your study plan settings first.';return;}
     if(type==='session'){
-      const session=(STATE.plannedSessions||[]).find(s=>s.id===id);
-      if(!session||session.status!=='planned'||session.date===date)return;
-      if(overlaps(date,session.start,session.end,session.id)){if(status)status.textContent='That move overlaps another session. Try another day or edit its time.';return;}
+      const session=(STATE.plannedSessions||[]).find(s=>String(s.id)===id);if(!session||session.status!=='planned')return;
+      const duration=Math.max(15,timeMinutes(session.end)-timeMinutes(session.start)),start=Math.max(timeMinutes(avail.start),Math.min(timeMinutes(avail.end)-duration,requested)),end=start+duration,hh=fmtMinute(start),ee=fmtMinute(end);
+      if(end>timeMinutes(avail.end)||overlaps(date,hh,ee,session.id)){if(status)status.textContent='That time overlaps another session or falls outside your available hours. Try another slot.';return;}
       if(typeof pushUndo==='function')pushUndo('Move study session');
-      session.date=date;session.updatedAt=new Date().toISOString();
-      saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();
-      if(status)status.textContent='Session moved to '+date+'.';
-    } else if(type==='task'){
-      const task=(STATE.tasks||[]).find(t=>String(t.id)===id);if(!task)return;const raw=String(task.time||task.estimatedTime||'30m').toLowerCase(),hm=raw.match(/(\d+(?:\\.\d+)?)\s*h/),mm=raw.match(/(\d+)\s*m/),minutes=Math.max(15,Math.round((((hm?+hm[1]*60:0)+(mm?+mm[1]:0))||parseInt(raw,10)||30)/15)*15);const time=findFreeTime(date,minutes,'16:00');if(!time){if(status)status.textContent='No available time fits this task on that day. Adjust availability or choose another day.';return;}if(typeof pushUndo==='function')pushUndo('Schedule task from task library');STATE.plannedSessions=STATE.plannedSessions||[];STATE.plannedSessions.push({id:typeof createId==='function'?createId('session'):'session-'+Date.now(),taskId:task.id,title:task.title,subject:task.subject||'Other',color:task.color||'#6366f1',date,start:time.start,end:time.end,estimatedMinutes:minutes,status:'planned',source:'task-library',createdAt:new Date().toISOString()});saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();toggleDrawer(false);if(status)status.textContent='“'+task.title+'” added to '+date+'.';
-    } else if(type==='suggestion'){
-      const suggestion=(STATE.scheduleSuggestions||[]).find(s=>s.id===id);
-      if(!suggestion)return;
-      const minutes=Number(suggestion.estimatedMinutes)||Math.max(15,timeMinutes(suggestion.end)-timeMinutes(suggestion.start));
-      let time={start:suggestion.start,end:suggestion.end};
-      if(date!==suggestion.date || overlaps(date,time.start,time.end,null))time=findFreeTime(date,minutes,suggestion.start);
-      if(!time){time=findFreeTime(date,minutes,suggestion.start);}
-      if(!time){if(status)status.textContent='No free time fits this session on that day. Change availability or choose another day.';return;}
-      if(typeof pushUndo==='function')pushUndo('Schedule suggested session');
-      STATE.plannedSessions=STATE.plannedSessions||[];
+      session.date=date;session.start=hh;session.end=ee;session.estimatedMinutes=duration;session.updatedAt=new Date().toISOString();
+      saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();if(status)status.textContent='Session moved to '+date+' at '+hh+'.';
+    }else if(type==='task'){
+      const task=(STATE.tasks||[]).find(t=>String(t.id)===id);if(!task)return;
+      const raw=String(task.time||task.estimatedTime||'30m').toLowerCase(),hm=raw.match(/(\d+(?:\.\d+)?)\s*h/),mm=raw.match(/(\d+)\s*m/),minutes=Math.max(15,Math.round((((hm?Number(hm[1])*60:0)+(mm?Number(mm[1]):0))||parseInt(raw,10)||30)/15)*15);
+      const start=Math.max(timeMinutes(avail.start),Math.min(timeMinutes(avail.end)-minutes,requested)),candidate={start:fmtMinute(start),end:fmtMinute(start+minutes)};
+      const time=!overlaps(date,candidate.start,candidate.end,null)&&timeMinutes(candidate.end)<=timeMinutes(avail.end)?candidate:findFreeTime(date,minutes,requestedText);
+      if(!time){if(status)status.textContent='No free time fits this task near '+requestedText+'. Try another time slot or day.';return;}
+      if(typeof pushUndo==='function')pushUndo('Schedule task from task library');STATE.plannedSessions=STATE.plannedSessions||[];
+      STATE.plannedSessions.push({id:typeof createId==='function'?createId('session'):'session-'+Date.now(),taskId:task.id,title:task.title,subject:task.subject||'Other',color:task.color||'#6366f1',date,start:time.start,end:time.end,estimatedMinutes:minutes,status:'planned',source:'task-library',createdAt:new Date().toISOString()});
+      saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();toggleDrawer(false);if(status)status.textContent='“'+task.title+'” scheduled '+date+' at '+time.start+'–'+time.end+'.';
+    }else if(type==='suggestion'){
+      const suggestion=(STATE.scheduleSuggestions||[]).find(s=>String(s.id)===id);if(!suggestion)return;
+      const minutes=Number(suggestion.estimatedMinutes)||Math.max(15,timeMinutes(suggestion.end)-timeMinutes(suggestion.start)),start=Math.max(timeMinutes(avail.start),Math.min(timeMinutes(avail.end)-minutes,requested)),candidate={start:fmtMinute(start),end:fmtMinute(start+minutes)};
+      const time=!overlaps(date,candidate.start,candidate.end,null)&&timeMinutes(candidate.end)<=timeMinutes(avail.end)?candidate:findFreeTime(date,minutes,requestedText);
+      if(!time){if(status)status.textContent='No free time fits this session near '+requestedText+'. Try another slot.';return;}
+      if(typeof pushUndo==='function')pushUndo('Schedule suggested session');STATE.plannedSessions=STATE.plannedSessions||[];
       STATE.plannedSessions.push({...suggestion,id:typeof createId==='function'?createId('session'):'session-'+Date.now(),date,start:time.start,end:time.end,estimatedMinutes:timeMinutes(time.end)-timeMinutes(time.start),status:'planned',acceptedAt:new Date().toISOString()});
-      STATE.scheduleSuggestions=(STATE.scheduleSuggestions||[]).filter(s=>s.id!==id);
-      saveLocalStorage();renderBoard();if(typeof renderStudyPlan==='function')renderStudyPlan();if(typeof renderDashboard==='function')renderDashboard();
-      if(status)status.textContent='Session scheduled for '+date+'.';
+      STATE.scheduleSuggestions=(STATE.scheduleSuggestions||[]).filter(s=>String(s.id)!==id);
+      saveLocalStorage();renderBoard();if(typeof renderStudyPlan==='function')renderStudyPlan();if(typeof renderDashboard==='function')renderDashboard();if(status)status.textContent='Session scheduled '+date+' at '+time.start+'–'+time.end+'.';
     }
   }
 
