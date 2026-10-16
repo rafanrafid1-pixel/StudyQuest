@@ -1573,9 +1573,7 @@
 
         function getAllWorkItems() {
             const tasks = (STATE.tasks || []).map(t => ({ ...t, workId: 'task:' + t.id, workKind: 'task', completed: false }));
-            const milestones = [];
-            (STATE.projects || []).forEach(project => (project.milestones || []).forEach(m => milestones.push({ id: m.id, title: m.title, subject: project.subject || 'Other', type: 'Milestone', notes: project.title, deadline: m.deadline || project.deadline || '', time: m.time || '30m', x: 60, y: 70, color: '#8b5cf6', workId: 'milestone:' + project.id + ':' + m.id, workKind: 'milestone', projectId: project.id, completed: !!m.completed, milestone: m, project })));
-            return tasks.concat(milestones);
+            return tasks;
         }
 
         function renderAllTasks() {
