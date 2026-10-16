@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v110-online-resources-portal';
+const CACHE_NAME = 'studyquest-v1101-google-account-routing';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg', './online-resources.js'];
 
