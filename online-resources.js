@@ -9,8 +9,8 @@
   const hostOf = value => { try { return new URL(value).hostname.replace(/^www\./,''); } catch (_) { return ''; } };
   const escapeText = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const getResources = () => {
-    if (!Array.isArray(window.STATE.resources)) window.STATE.resources = [];
-    return window.STATE.resources;
+    if (!Array.isArray(STATE.resources)) STATE.resources = [];
+    return STATE.resources;
   };
   const faviconFor = url => {
     const host = hostOf(url);
@@ -75,8 +75,8 @@
     const id = $('resource-id').value;
     const resource = getResources().find(r => r.id === id);
     if (!resource || !confirm('Delete "' + resource.name + '" from Online Resources? Homework tasks linked to it will keep their saved assignment links, but the resource association will be cleared.')) return;
-    window.STATE.tasks.forEach(t => { if (t.resourceId === id) t.resourceId = ''; });
-    window.STATE.resources = getResources().filter(r => r.id !== id);
+    STATE.tasks.forEach(t => { if (t.resourceId === id) t.resourceId = ''; });
+    STATE.resources = getResources().filter(r => r.id !== id);
     if (typeof window.saveLocalStorage === 'function') window.saveLocalStorage();
     render(); closeForm();
   }
@@ -89,7 +89,7 @@
     root.innerHTML = '';
     $('resources-empty').classList.toggle('hidden', items.length > 0);
     items.forEach(item => {
-      const linked = (window.STATE.tasks || []).filter(t => t.resourceId === item.id);
+      const linked = (STATE.tasks || []).filter(t => t.resourceId === item.id);
       const card = document.createElement('article');
       card.className = 'themed-card-sub border rounded-2xl p-4 sm:p-5 flex flex-col gap-3';
       const logo = item.logo || faviconFor(item.url);
@@ -131,8 +131,8 @@
     if (!$('resource-logo').value.trim()) setPreview(faviconFor(url));
   }
   function init() {
-    if (!window.STATE) return;
-    const state = window.STATE;
+    if (typeof STATE === 'undefined') return;
+    const state = STATE;
     if (!Array.isArray(state.resources)) state.resources = [];
     const oldNormalize = window.normalizeState;
     if (typeof oldNormalize === 'function' && !oldNormalize.__resourcesWrapped) {
