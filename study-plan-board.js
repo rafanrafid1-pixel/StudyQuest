@@ -189,16 +189,19 @@
       if(end>timeMinutes(avail.end)||overlaps(date,hh,ee,session.id)){if(status)status.textContent='That time overlaps another session or falls outside your available hours. Try another slot.';return;}
       if(typeof pushUndo==='function')pushUndo('Move study session');
       session.date=date;session.start=hh;session.end=ee;session.estimatedMinutes=duration;session.updatedAt=new Date().toISOString();
-      saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();if(status)status.textContent='Session moved to '+date+' at '+hh+'.';
+      saveLocalStorage();renderBoard();if(typeof renderStudyPlan==='function')renderStudyPlan();if(typeof renderDashboard==='function')renderDashboard();if(status)status.textContent='Session moved to '+date+' at '+hh+'.';
     }else if(type==='task'){
       const task=(STATE.tasks||[]).find(t=>String(t.id)===id);if(!task)return;
       const raw=String(task.time||task.estimatedTime||'30m').toLowerCase(),hm=raw.match(/(\d+(?:\.\d+)?)\s*h/),mm=raw.match(/(\d+)\s*m/),minutes=Math.max(15,Math.round((((hm?Number(hm[1])*60:0)+(mm?Number(mm[1]):0))||parseInt(raw,10)||30)/15)*15);
+      const existing=(STATE.plannedSessions||[]).find(s=>s.status==='planned'&&String(s.sourceId||s.taskId)===String(task.id));
       const start=Math.max(timeMinutes(avail.start),Math.min(timeMinutes(avail.end)-minutes,requested)),candidate={start:fmtMinute(start),end:fmtMinute(start+minutes)};
-      const time=!overlaps(date,candidate.start,candidate.end,null)&&timeMinutes(candidate.end)<=timeMinutes(avail.end)?candidate:findFreeTime(date,minutes,requestedText);
+      const time=!overlaps(date,candidate.start,candidate.end,existing?.id||null)&&timeMinutes(candidate.end)<=timeMinutes(avail.end)?candidate:findFreeTime(date,minutes,requestedText);
       if(!time){if(status)status.textContent='No free time fits this task near '+requestedText+'. Try another time slot or day.';return;}
-      if(typeof pushUndo==='function')pushUndo('Schedule task from task library');STATE.plannedSessions=STATE.plannedSessions||[];
-      STATE.plannedSessions.push({id:typeof createId==='function'?createId('session'):'session-'+Date.now(),taskId:task.id,title:task.title,subject:task.subject||'Other',color:task.color||'#6366f1',date,start:time.start,end:time.end,estimatedMinutes:minutes,status:'planned',source:'task-library',createdAt:new Date().toISOString()});
-      saveLocalStorage();renderBoard();if(typeof renderDashboard==='function')renderDashboard();toggleDrawer(false);if(status)status.textContent='“'+task.title+'” scheduled '+date+' at '+time.start+'–'+time.end+'.';
+      if(typeof pushUndo==='function')pushUndo(existing?'Move existing homework session':'Schedule task from task library');STATE.plannedSessions=STATE.plannedSessions||[];
+      const sessionData={taskId:task.id,sourceType:'task',sourceId:task.id,title:task.title,subject:task.subject||'Other',color:task.color||'#6366f1',date,start:time.start,end:time.end,estimatedMinutes:timeMinutes(time.end)-timeMinutes(time.start),status:'planned',source:'task-library',updatedAt:new Date().toISOString()};
+      if(existing)Object.assign(existing,sessionData);else STATE.plannedSessions.push({id:typeof createId==='function'?createId('session'):'session-'+Date.now(),...sessionData,createdAt:new Date().toISOString()});
+      saveLocalStorage();renderBoard();if(typeof renderStudyPlan==='function')renderStudyPlan();if(typeof renderDashboard==='function')renderDashboard();toggleDrawer(false);if(status)status.textContent=(existing?'Moved “':'Scheduled “')+task.title+'” '+date+' at '+time.start+'–'+time.end+'.';
+    
     }else if(type==='suggestion'){
       const suggestion=(STATE.scheduleSuggestions||[]).find(s=>String(s.id)===id);if(!suggestion)return;
       const minutes=Number(suggestion.estimatedMinutes)||Math.max(15,timeMinutes(suggestion.end)-timeMinutes(suggestion.start)),start=Math.max(timeMinutes(avail.start),Math.min(timeMinutes(avail.end)-minutes,requested)),candidate={start:fmtMinute(start),end:fmtMinute(start+minutes)};
