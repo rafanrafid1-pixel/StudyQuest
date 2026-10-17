@@ -1,6 +1,6 @@
 const CACHE_NAME = 'studyquest-v113-planning-workflow';
 const CACHE_PREFIX = 'studyquest-';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg', './online-resources.js'];
+const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg', './study-plan-board.js', './online-resources.js'];
 
 self.addEventListener('install', event => {
   // Activate new versions automatically; the page persists app data locally before this can reload.
