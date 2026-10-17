@@ -1045,7 +1045,14 @@
                     <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
                         <h3 class="text-base font-black text-indigo-300">V11 — Online Resources Portal</h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Added a dedicated portal for school websites, revision platforms and online homework resources.</li><li>Resources can be reused across multiple tasks, with optional assignment-specific links.</li><li>Added website-name suggestions, favicon/logo lookup, editable descriptions and resource search.</li><li>Kept existing StudyQuest areas and task workflows available.</li></ul>
-                        <div class="ml-2 sm:ml-4 space-y-2"><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.3 — Homework link reliability</div><p class="text-xs opacity-65">Allowed task-specific homework links to use school website addresses with or without https://, and clarified the link field guidance.</p></div><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.2 — Custom school links</div><p class="text-xs opacity-65">Allowed custom school websites and homework portals to be added using a domain with or without https://, and corrected Google account email validation.</p></div><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.1 — Google account selection</div><p class="text-xs opacity-65">Added optional Google account emails to resources and individual homework tasks so Google links can request the intended account.</p></div></div>
+                        <div class="ml-2 sm:ml-4 space-y-2">
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.3 — A clearer daily workflow</div><p class="text-xs opacity-65">Today's Plan now surfaces direct homework links for scheduled tasks, making it easier to resume work without searching for the assignment.</p></div>
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.2 — More dependable time planning</div><p class="text-xs opacity-65">Task-to-calendar scheduling tracks the source task, avoids duplicate planned sessions, and keeps moved sessions in sync with the dashboard.</p></div>
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.1 — Reliable homework workflow</div><p class="text-xs opacity-65">Improved homework link validation and account-email validation, and made task-specific links easier to enter.</p></div>
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.3 — Homework link reliability</div><p class="text-xs opacity-65">Allowed task-specific homework links to use school website addresses with or without https://, and clarified the link field guidance.</p></div>
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.2 — Custom school links</div><p class="text-xs opacity-65">Allowed custom school websites and homework portals to be added using a domain with or without https://, and corrected Google account email validation.</p></div>
+                            <div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.1 — Google account selection</div><p class="text-xs opacity-65">Added optional Google account emails to resources and individual homework tasks so Google links can request the intended account.</p></div>
+                        </div>
                     </article>
                     <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
                         <h3 class="text-base font-black text-indigo-300">V10 — Proactive Planning</h3>
@@ -1589,7 +1596,7 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
                 } catch (_) { alert('Enter a valid homework website address, such as schoolportal.example/assignment.'); return; }
             }
             const googleAccountEmail = document.getElementById('input-google-account-email').value.trim();
-            if (googleAccountEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(googleAccountEmail)) { alert('Enter a valid Google account email address.'); return; }
+            if (googleAccountEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(googleAccountEmail)) { alert('Enter a valid Google account email address.'); return; }
             const color = document.getElementById('input-color').value;
             const x = parseInt(document.getElementById('input-urgency').value);
             const y = parseInt(document.getElementById('input-importance').value);
@@ -2232,7 +2239,24 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
             sessions.forEach(session => {
                 const row = document.createElement('div');
                 row.className = 'themed-card-sub border rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3';
-                row.innerHTML = `<div class="flex-1 min-w-0"><div class="text-xs font-bold">${escapeHtml(session.title)}</div><div class="text-[10px] opacity-65 mt-1">${escapeHtml(session.subject || 'Other')} · ${escapeHtml(session.start || '')}–${escapeHtml(session.end || '')} · ${Number(session.estimatedMinutes) || 0} min</div><div class="text-[10px] opacity-60 mt-1">${session.sourceType === 'task' ? 'Homework session' : session.sourceType === 'milestone' ? 'Project milestone' : 'Study session'}</div></div><div class="flex flex-wrap gap-2"><button type="button" onclick="switchTab('plan')" class="themed-card border rounded-lg px-3 py-2 text-[10px] font-bold">Edit schedule</button>${session.sourceType === 'task' ? `<button type="button" onclick="completeTask('${escapeAttr(session.sourceId)}')" class="bg-emerald-600 text-white rounded-lg px-3 py-2 text-[10px] font-bold">Mark homework done</button>` : ''}</div>`;
+                const sourceTaskId = session.sourceId || session.taskId || '';
+                const sourceTask = sourceTaskId ? (STATE.tasks || []).find(task => String(task.id) === String(sourceTaskId)) : null;
+                let homeworkUrl = '';
+                if (sourceTask) {
+                    try {
+                        const resource = (STATE.resources || []).find(item => item.id === sourceTask.resourceId);
+                        const rawUrl = String(sourceTask.assignmentUrl || resource?.url || '').trim();
+                        const normalized = rawUrl && !/^[a-z][a-z0-9+.-]*:\/\//i.test(rawUrl) ? 'https://' + rawUrl : rawUrl;
+                        const parsed = normalized ? new URL(normalized) : null;
+                        if (parsed && ['https:', 'http:'].includes(parsed.protocol) && parsed.hostname.includes('.')) {
+                            const email = String(sourceTask.googleAccountEmail || resource?.accountEmail || '').trim();
+                            const host = parsed.hostname.toLowerCase();
+                            if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (host === 'google.com' || host.endsWith('.google.com') || host === 'google.co.uk' || host.endsWith('.google.co.uk'))) parsed.searchParams.set('authuser', email);
+                            homeworkUrl = parsed.href;
+                        }
+                    } catch (_) {}
+                }
+                row.innerHTML = `<div class="flex-1 min-w-0"><div class="text-xs font-bold">${escapeHtml(session.title)}</div><div class="text-[10px] opacity-65 mt-1">${escapeHtml(session.subject || 'Other')} · ${escapeHtml(session.start || '')}–${escapeHtml(session.end || '')} · ${Number(session.estimatedMinutes) || 0} min</div><div class="text-[10px] opacity-60 mt-1">${session.sourceType === 'task' || session.taskId ? 'Homework session' : session.sourceType === 'milestone' ? 'Project milestone' : 'Study session'}</div></div><div class="flex flex-wrap gap-2">${homeworkUrl ? `<a href="${escapeAttr(homeworkUrl)}" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 text-white rounded-lg px-3 py-2 text-[10px] font-bold">Open homework</a>` : ''}<button type="button" onclick="switchTab('plan')" class="themed-card border rounded-lg px-3 py-2 text-[10px] font-bold">Edit schedule</button>${(session.sourceType === 'task' || session.taskId) && sourceTask ? `<button type="button" onclick="completeTask('${escapeAttr(sourceTask.id)}')" class="bg-emerald-600 text-white rounded-lg px-3 py-2 text-[10px] font-bold">Mark homework done</button>` : ''}</div>`;
                 list.appendChild(row);
             });
         }
