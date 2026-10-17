@@ -1045,7 +1045,7 @@
                     <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
                         <h3 class="text-base font-black text-indigo-300">V11 — Online Resources Portal</h3>
                         <ul class="text-xs opacity-80 space-y-1 list-disc list-inside"><li>Added a dedicated portal for school websites, revision platforms and online homework resources.</li><li>Resources can be reused across multiple tasks, with optional assignment-specific links.</li><li>Added website-name suggestions, favicon/logo lookup, editable descriptions and resource search.</li><li>Kept existing StudyQuest areas and task workflows available.</li></ul>
-                        <div class="ml-2 sm:ml-4 space-y-2"><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.2 — Custom school links</div><p class="text-xs opacity-65">Allowed custom school websites and homework portals to be added using a domain with or without https://, and corrected Google account email validation.</p></div><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.1 — Google account selection</div><p class="text-xs opacity-65">Added optional Google account emails to resources and individual homework tasks so Google links can request the intended account.</p></div></div>
+                        <div class="ml-2 sm:ml-4 space-y-2"><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.3 — Homework link reliability</div><p class="text-xs opacity-65">Allowed task-specific homework links to use school website addresses with or without https://, and clarified the link field guidance.</p></div><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.2 — Custom school links</div><p class="text-xs opacity-65">Allowed custom school websites and homework portals to be added using a domain with or without https://, and corrected Google account email validation.</p></div><div class="themed-card border rounded-xl p-3 space-y-1"><div class="text-xs font-bold opacity-80">V11.0.1 — Google account selection</div><p class="text-xs opacity-65">Added optional Google account emails to resources and individual homework tasks so Google links can request the intended account.</p></div></div>
                     </article>
                     <article class="themed-card-sub border border-indigo-500/40 rounded-2xl p-4 sm:p-5 space-y-3">
                         <h3 class="text-base font-black text-indigo-300">V10 — Proactive Planning</h3>
@@ -1180,7 +1180,7 @@
 
                 <div class="p-3 themed-card-sub rounded-2xl border space-y-3">
                     <div><label for="input-resource-id" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Online resource (optional)</label><select id="input-resource-id" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><option value="">No resource linked</option></select><p class="text-[10px] opacity-60 mt-1">Link this task to a website in your Online Resources portal.</p></div>
-                    <div><label for="input-assignment-url" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Exact homework link (optional)</label><input id="input-assignment-url" type="url" placeholder="https://.../specific-assignment" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-60 mt-1">When provided, this opens the specific assignment rather than the resource homepage.</p></div>
+                    <div><label for="input-assignment-url" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Exact homework link (optional)</label><input id="input-assignment-url" type="text" inputmode="url" placeholder="schoolportal.example/assignment or https://..." class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-60 mt-1">Accepts a full link or a school website address without https://. Opens the specific assignment instead of the resource homepage.</p></div>
                     <div><label for="input-google-account-email" class="block text-xs font-extrabold uppercase tracking-wider mb-1">Google account for this homework (optional)</label><input id="input-google-account-email" type="email" maxlength="254" placeholder="Use resource default or browser default" class="w-full px-3 py-2.5 rounded-xl themed-card border text-xs"><p class="text-[10px] opacity-60 mt-1">Overrides the resource's account for this task. Works with Google links; it cannot sign you in or grant access by itself.</p></div>
                     <button type="button" onclick="document.getElementById('resource-add').click()" class="text-xs font-bold text-indigo-400 hover:text-indigo-300"><i class="fa-solid fa-plus mr-1"></i>Add a resource without leaving this task</button>
                 </div>
@@ -1580,7 +1580,14 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
             const resourceId = document.getElementById('input-resource-id').value;
             const assignmentUrlRaw = document.getElementById('input-assignment-url').value.trim();
             let assignmentUrl = '';
-            if (assignmentUrlRaw) { try { const parsedAssignmentUrl = new URL(assignmentUrlRaw); if (!['https:', 'http:'].includes(parsedAssignmentUrl.protocol)) throw new Error(); assignmentUrl = parsedAssignmentUrl.href; } catch (_) { alert('Enter a valid homework link beginning with https:// or http://.'); return; } }
+            if (assignmentUrlRaw) {
+                try {
+                    const normalizedAssignmentUrl = /^[a-z][a-z0-9+.-]*:\/\//i.test(assignmentUrlRaw) ? assignmentUrlRaw : 'https://' + assignmentUrlRaw;
+                    const parsedAssignmentUrl = new URL(normalizedAssignmentUrl);
+                    if (!['https:', 'http:'].includes(parsedAssignmentUrl.protocol) || !parsedAssignmentUrl.hostname.includes('.')) throw new Error();
+                    assignmentUrl = parsedAssignmentUrl.href;
+                } catch (_) { alert('Enter a valid homework website address, such as schoolportal.example/assignment.'); return; }
+            }
             const googleAccountEmail = document.getElementById('input-google-account-email').value.trim();
             if (googleAccountEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(googleAccountEmail)) { alert('Enter a valid Google account email address.'); return; }
             const color = document.getElementById('input-color').value;
