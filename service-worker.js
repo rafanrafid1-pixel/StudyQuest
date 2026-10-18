@@ -1,4 +1,4 @@
-const CACHE_NAME = 'studyquest-v113-planning-workflow';
+const CACHE_NAME = 'studyquest-v114-workflow-reliability';
 const CACHE_PREFIX = 'studyquest-';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './studyquest-icon.svg', './study-plan-board.js', './online-resources.js'];
 
