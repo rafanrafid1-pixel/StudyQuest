@@ -2083,8 +2083,11 @@ if (tabId === 'resources' && typeof window.sqRenderResources === 'function') win
                 const intervalWeeks = Math.max(1, Math.min(52, Number(task.recurrence.intervalWeeks)||1));
                 STATE.tasks.push({ ...task, id:createId('task'), deadline:nextDate, recurrence:{ ...task.recurrence, intervalWeeks, occurrenceNumber:Math.max(1, Number(task.recurrence.occurrenceNumber)||1)+1 }, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() });
             }
-            STATE.scheduleSuggestions = (STATE.scheduleSuggestions || []).filter(s => !(s.sourceType === 'task' && s.sourceId === id));
-            STATE.plannedSessions = (STATE.plannedSessions || []).filter(s => !(s.sourceType === 'task' && s.sourceId === id && s.status === 'planned'));
+            // Remove every pending planner item linked to this task, including legacy sessions
+            // that stored taskId but did not yet have sourceType/sourceId populated.
+            const isLinkedTaskItem = item => (item.sourceType === 'task' || item.taskId != null) && String(item.sourceId || item.taskId || '') === String(id);
+            STATE.scheduleSuggestions = (STATE.scheduleSuggestions || []).filter(s => !isLinkedTaskItem(s));
+            STATE.plannedSessions = (STATE.plannedSessions || []).filter(s => !(isLinkedTaskItem(s) && s.status === 'planned'));
             if (typeof confetti === 'function') confetti({ particleCount:70, spread:70, origin:{ y:0.7 } });
             if (STATE.soundEnabled) playChimeSound();
             checkLevelUp();
